@@ -13,6 +13,8 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 import AdminRoute from './components/common/AdminRoute';
 
 // Pages
+import Designer from './pages/Designer';
+import Admin from './pages/Admin'; // NEW ROUTE
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -61,6 +63,8 @@ function App() {
                 <Route path="/otp-verification" element={<OtpVerification />} />
                 <Route path="/products" element={<Products />} />
                 <Route path="/products/:id" element={<ProductDetails />} />
+                <Route path="/designer" element={<Designer />} />
+                <Route path="/admin" element={<Admin />} /> {/* Testing phase */}
                 
                 {/* Protected Routes */}
                 <Route element={<ProtectedRoute />}>
@@ -75,7 +79,7 @@ function App() {
 
                 {/* Admin Routes */}
                 <Route element={<AdminRoute />}>
-                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/admin-legacy" element={<AdminDashboard />} />
                   <Route path="/admin/products" element={<AdminProducts />} />
                   <Route path="/admin/orders" element={<AdminOrders />} />
                   <Route path="/admin/users" element={<AdminUsers />} />
