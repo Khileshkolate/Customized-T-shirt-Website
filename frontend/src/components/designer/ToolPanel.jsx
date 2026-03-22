@@ -1,6 +1,7 @@
 import React from 'react';
 import useDesignStore from '../../store/designStore';
 import { Type, Upload, Square, Circle, Triangle, Slash } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const colors = [
     { name: 'White', hex: '#ffffff' },
@@ -20,12 +21,41 @@ const ToolPanel = () => {
       shirtColor, setShirtColor,
       printZone, setPrintZone,
       fabric, setFabric,
-      addText, addShape 
+      addText, addShape, addImage
   } = useDesignStore();
+  
+  const fileInputRef = React.useRef(null);
+
+  const handleUpload = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+          toast.error('Please upload a valid image file');
+          return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (f) => {
+          const data = f.target.result;
+          addImage(data);
+      };
+      reader.readAsDataURL(file);
+      e.target.value = ''; // Reset
+  };
 
   return (
     <div className="w-[300px] h-full bg-white border-r border-gray-200 text-gray-700 overflow-y-auto custom-scrollbar flex flex-col pt-4 shadow-xl z-20">
       
+      {/* Hidden File Input for Image Upload */}
+      <input 
+          type="file" 
+          accept="image/*" 
+          ref={fileInputRef} 
+          className="hidden" 
+          onChange={handleUpload} 
+      />
+
       {/* T SHIRT TYPE */}
       <div className="px-6 mb-8 mt-2">
         <h3 className="text-[10px] font-bold tracking-widest text-gray-400 mb-4 uppercase">T Shirt Type</h3>
@@ -85,7 +115,7 @@ const ToolPanel = () => {
         <div className="grid grid-cols-3 gap-2">
             {[
                 { icon: Type, label: 'TEXT', action: () => addText() },
-                { icon: Upload, label: 'UPLOAD', action: () => {} },
+                { icon: Upload, label: 'UPLOAD', action: () => fileInputRef.current?.click() },
                 { icon: Square, label: 'RECT', action: () => addShape('rect') },
                 { icon: Circle, label: 'CIRCLE', action: () => addShape('circle') },
                 { icon: Triangle, label: 'TRIANGLE', action: () => addShape('triangle') },

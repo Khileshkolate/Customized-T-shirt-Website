@@ -21,7 +21,7 @@
 //   const navLinks = [
 //     { name: 'Home', path: '/' },
 //     { name: 'Products', path: '/products' },
-//     { name: 'Design Studio', path: '/design' },
+//     { name: 'Design Studio', path: '/designer' },
 //   ]
 
 //   const handleLogout = () => {
@@ -236,7 +236,7 @@
 //   const navLinks = [
 //     { name: 'Home', path: '/', icon: <Sparkles className="h-4 w-4" /> },
 //     { name: 'Products', path: '/products', icon: <Package className="h-4 w-4" /> },
-//     { name: 'Design Studio', path: '/design', icon: <Palette className="h-4 w-4" /> },
+//     { name: 'Design Studio', path: '/designer', icon: <Palette className="h-4 w-4" /> },
 //   ]
 
 //   // Search suggestions data
@@ -750,7 +750,7 @@ const Navbar = () => {
   const navLinks = [
     { name: 'Home', path: '/', icon: <Home className="h-4 w-4" /> },
     { name: 'Products', path: '/products', icon: <Package className="h-4 w-4" /> },
-    { name: 'Design Studio', path: '/design', icon: <Palette className="h-4 w-4" /> },
+    { name: 'Design Studio', path: '/designer', icon: <Palette className="h-4 w-4" /> },
   ]
 
   // Search suggestions data
