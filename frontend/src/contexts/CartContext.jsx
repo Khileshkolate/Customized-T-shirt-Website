@@ -33,32 +33,23 @@ export const CartProvider = ({ children }) => {
     setCartTotal(total);
   }, [cartItems]);
 
-  const addToCart = (product, quantity = 1, design = null) => {
+  const addToCart = (newItem) => {
     setCartItems(prev => {
       const existingItem = prev.find(item => 
-        item.productId === product._id && 
-        item.designId === (design?._id || null)
+        item.productId === newItem.productId && 
+        item.designId === newItem.designId &&
+        item.color === newItem.color &&
+        item.size === newItem.size
       );
 
       if (existingItem) {
         return prev.map(item =>
           item.id === existingItem.id
-            ? { ...item, quantity: item.quantity + quantity }
+            ? { ...item, quantity: item.quantity + (newItem.quantity || 1) }
             : item
         );
       } else {
-        const newItem = {
-          id: Date.now().toString(),
-          productId: product._id,
-          productName: product.name,
-          price: product.price,
-          quantity,
-          image: product.images?.[0]?.url || null,
-          design: design,
-          color: null,
-          size: null
-        };
-        return [...prev, newItem];
+        return [...prev, { ...newItem, id: Date.now().toString() }];
       }
     });
   };

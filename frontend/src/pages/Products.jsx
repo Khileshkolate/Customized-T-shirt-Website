@@ -333,6 +333,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams()
+  const selectedCategory = searchParams.get('category')
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState('grid')
   const [showFilters, setShowFilters] = useState(false)
@@ -415,135 +416,34 @@ const Products = () => {
     { icon: <Gift className="h-5 w-5" />, text: 'Free Shipping' }
   ]
 
-  const sampleProducts = [
-    {
-      _id: '1',
-      name: 'Premium Cotton T-Shirt',
-      description: '100% premium cotton, comfortable fit for all-day wear. Perfect for custom prints.',
-      price: 599,
-      discountPrice: 499,
-      type: 't-shirt',
-      category: '1',
-      rating: 4.8,
-      reviews: 128,
-      tags: ['Best Seller', 'Trending'],
-      colors: ['#000000', '#FFFFFF', '#3B82F6', '#EF4444'],
-      sizes: ['S', 'M', 'L', 'XL'],
-      images: [{ url: '/tshirt.jpg' }]
-    },
-    {
-      _id: '2',
-      name: 'Custom Printed Ceramic Mug',
-      description: 'High-quality ceramic mug with vibrant print that lasts. Microwave and dishwasher safe.',
-      price: 299,
-      type: 'mug',
-      category: '2',
-      rating: 4.5,
-      reviews: 56,
-      tags: ['Personalized'],
-      colors: ['#FFFFFF', '#000000', '#F59E0B'],
-      sizes: ['11oz', '15oz'],
-      images: [{ url: '/mug.jpg' }]
-    },
-    {
-      _id: '3',
-      name: 'Premium Wooden Photo Frame',
-      description: 'Elegant wooden frame with glass protection. Perfect for preserving memories.',
-      price: 399,
-      discountPrice: 349,
-      type: 'frame',
-      category: '3',
-      rating: 4.7,
-      reviews: 89,
-      tags: ['New Arrival'],
-      colors: ['#92400E', '#1F2937', '#374151'],
-      sizes: ['5x7', '8x10', '11x14'],
-      images: [{ url: '/frame.jpg' }]
-    },
-    {
-      _id: '4',
-      name: 'Premium Zip-up Hoodie',
-      description: 'Winter-ready premium hoodie with custom embroidery. Fleece lined for warmth.',
-      price: 899,
-      type: 'hoodie',
-      category: '5',
-      rating: 4.9,
-      reviews: 204,
-      tags: ['Premium', 'Limited'],
-      colors: ['#000000', '#1E40AF', '#7C2D12'],
-      sizes: ['S', 'M', 'L', 'XL', 'XXL'],
-      images: [{ url: '/hoodie.jpg' }]
-    },
-    {
-      _id: '5',
-      name: 'Round Neck T-Shirt Pack',
-      description: 'Pack of 3 basic round neck t-shirts. Great value for daily wear and customization.',
-      price: 999,
-      discountPrice: 799,
-      type: 't-shirt',
-      category: '1',
-      rating: 4.3,
-      reviews: 67,
-      tags: ['Bundle Deal'],
-      colors: ['#000000', '#FFFFFF', '#6B7280'],
-      sizes: ['S', 'M', 'L'],
-      images: [{ url: '/tshirt2.jpg' }]
-    },
-    {
-      _id: '6',
-      name: 'Insulated Travel Mug',
-      description: 'Double-walled insulated travel mug keeps drinks hot/cold for hours.',
-      price: 549,
-      discountPrice: 499,
-      type: 'mug',
-      category: '2',
-      rating: 4.6,
-      reviews: 142,
-      tags: ['Insulated'],
-      colors: ['#1E40AF', '#374151', '#D1D5DB'],
-      sizes: ['16oz', '20oz'],
-      images: [{ url: '/travel-mug.jpg' }]
-    },
-    {
-      _id: '7',
-      name: 'Custom Embroidered Cap',
-      description: 'Adjustable snapback cap with custom embroidery. UV protection fabric.',
-      price: 349,
-      type: 'cap',
-      category: '6',
-      rating: 4.4,
-      reviews: 45,
-      tags: ['Summer Essential'],
-      colors: ['#000000', '#FFFFFF', '#DC2626', '#F59E0B'],
-      sizes: ['One Size'],
-      images: [{ url: '/cap.jpg' }]
-    },
-    {
-      _id: '8',
-      name: 'Premium Poster Print',
-      description: 'High-quality matte finish poster with vibrant colors. Perfect for wall decor.',
-      price: 199,
-      discountPrice: 149,
-      type: 'poster',
-      category: '8',
-      rating: 4.8,
-      reviews: 93,
-      tags: ['Wall Art'],
-      colors: ['All Colors'],
-      sizes: ['A3', 'A2', '24x36'],
-      images: [{ url: '/poster.jpg' }]
-    }
-  ]
-
-  const selectedCategory = searchParams.get('category') || ''
+  const [products, setProducts] = useState([])
 
   useEffect(() => {
-    // Simulate loading
-    const timer = setTimeout(() => setLoading(false), 1000)
-    return () => clearTimeout(timer)
+    const fetchProducts = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch('http://localhost:5000/api/products')
+        if (!response.ok) {
+           throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json()
+        if (Array.isArray(data)) {
+           setProducts(data)
+        } else {
+           setProducts([])
+           console.error('API did not return an array')
+        }
+      } catch (error) {
+        console.error('Error fetching products:', error)
+        setProducts([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchProducts()
   }, [])
 
-  const filteredProducts = sampleProducts.filter(product => {
+  const filteredProducts = products.filter(product => {
     if (selectedCategory && product.category !== categories.find(c => c.slug === selectedCategory)?._id) {
       return false
     }
@@ -702,11 +602,11 @@ const Products = () => {
                         </div>
                         <span className="font-medium">All Products</span>
                         <span className="ml-auto text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                          {sampleProducts.length}
+                          {products.length}
                         </span>
                       </button>
                       {categories.map(category => {
-                        const count = sampleProducts.filter(p => p.category === category._id).length
+                        const count = products.filter(p => p.category === category._id).length
                         return (
                           <button
                             key={category._id}
@@ -814,7 +714,7 @@ const Products = () => {
               
               <div className="flex items-center gap-4">
                 <div className="text-gray-600">
-                  Showing <span className="font-bold text-gray-900">{sortedProducts.length}</span> of {sampleProducts.length} products
+                  Showing <span className="font-bold text-gray-900">{sortedProducts.length}</span> of {products.length} products
                 </div>
                 
                 <div className="flex items-center gap-1 bg-white rounded-xl p-1 shadow-lg">
@@ -896,15 +796,14 @@ const Products = () => {
                           </motion.div>
                         </div>
                         
-                        {/* Tags */}
-                        <div className="absolute top-4 left-4 flex gap-2">
-                          {product.tags.map((tag, i) => (
+                        <div className="absolute top-4 left-4 flex flex-wrap gap-2">
+                          {product.tags?.map((tag, i) => (
                             <motion.span 
                               key={i}
                               initial={{ scale: 0 }}
                               animate={{ scale: 1 }}
                               transition={{ delay: i * 0.1 }}
-                              className="text-xs font-bold px-3 py-1 rounded-full bg-white/90 backdrop-blur-sm shadow-lg"
+                              className="text-xs font-bold px-3 py-1 rounded-full bg-white/90 backdrop-blur-sm shadow-lg mb-1"
                             >
                               {tag}
                             </motion.span>
@@ -946,7 +845,7 @@ const Products = () => {
                           <div className="flex items-center gap-1">
                             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                             <span className="text-sm text-gray-600">{product.rating}</span>
-                            <span className="text-sm text-gray-400">({product.reviews})</span>
+                            <span className="text-sm text-gray-400">({product.numReviews})</span>
                           </div>
                         </div>
                         
@@ -960,15 +859,15 @@ const Products = () => {
 
                         {/* Color Swatches */}
                         <div className="flex items-center gap-2 mb-4">
-                          {product.colors.slice(0, 4).map((color, i) => (
+                          {(product.colors || []).slice(0, 4).map((color, i) => (
                             <div
                               key={i}
                               className="w-6 h-6 rounded-full border border-gray-200 shadow-sm"
                               style={{ backgroundColor: color }}
                             />
                           ))}
-                          {product.colors.length > 4 && (
-                            <span className="text-xs text-gray-500">+{product.colors.length - 4}</span>
+                          {(product.colors || []).length > 4 && (
+                            <span className="text-xs text-gray-500">+{(product.colors || []).length - 4}</span>
                           )}
                         </div>
 
@@ -1046,17 +945,17 @@ const Products = () => {
                     <div className="flex-1">
                       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                         <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-3">
+                          <div className="flex flex-wrap items-center gap-3 mb-3">
                             <span className="text-sm font-medium text-primary-600 bg-primary-50 px-3 py-1 rounded-full">
                               {product.type}
                             </span>
                             <div className="flex items-center gap-1">
                               <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                               <span className="text-sm text-gray-600">{product.rating}</span>
-                              <span className="text-sm text-gray-400">({product.reviews})</span>
+                              <span className="text-sm text-gray-400">({product.numReviews})</span>
                             </div>
-                            {product.tags.map((tag, i) => (
-                              <span key={i} className="text-xs font-bold px-2 py-1 rounded-full bg-gray-100">
+                            {(product.tags || []).map((tag, i) => (
+                              <span key={i} className="text-xs font-bold px-2 py-1 rounded-full bg-gray-100 mb-1">
                                 {tag}
                               </span>
                             ))}
@@ -1065,7 +964,7 @@ const Products = () => {
                           <h3 className="text-2xl font-bold text-gray-900 mb-2">
                             {product.name}
                           </h3>
-                          <p className="text-gray-600 mb-4">
+                          <p className="text-gray-600 mb-4 line-clamp-2">
                             {product.description}
                           </p>
                           
@@ -1073,7 +972,7 @@ const Products = () => {
                             <div className="flex items-center gap-2">
                               <span className="text-sm text-gray-700 font-medium">Colors:</span>
                               <div className="flex gap-1">
-                                {product.colors.slice(0, 3).map((color, i) => (
+                                {(product.colors || []).slice(0, 3).map((color, i) => (
                                   <div
                                     key={i}
                                     className="w-5 h-5 rounded-full border border-gray-200"
@@ -1084,9 +983,9 @@ const Products = () => {
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-sm text-gray-700 font-medium">Sizes:</span>
-                              <div className="flex gap-1">
-                                {product.sizes.map((size, i) => (
-                                  <span key={i} className="text-xs px-2 py-1 bg-gray-100 rounded">
+                              <div className="flex flex-wrap gap-1">
+                                {(product.sizes || []).map((size, i) => (
+                                  <span key={i} className="text-xs px-2 py-1 bg-gray-100 rounded mb-1">
                                     {size}
                                   </span>
                                 ))}

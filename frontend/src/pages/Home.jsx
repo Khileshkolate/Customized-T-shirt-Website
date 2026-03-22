@@ -230,7 +230,7 @@ const Home = () => {
             
             <div className="flex flex-wrap gap-4 mb-12">
               <Link
-                to="/design"
+                to="/designer"
                 className="group inline-flex items-center gap-2 bg-white text-primary-700 px-8 py-4 rounded-full font-semibold hover:bg-gray-100 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-2xl"
               >
                 <Palette className="h-5 w-5" />
@@ -576,7 +576,7 @@ const Home = () => {
               </Link>
               
               <Link
-                to="/design"
+                to="/designer"
                 className="group inline-flex items-center gap-2 border-2 border-primary-600 text-primary-600 px-8 py-4 rounded-full font-semibold hover:bg-primary-50 transition-all duration-300 hover:scale-105"
               >
                 <Palette className="h-5 w-5" />
