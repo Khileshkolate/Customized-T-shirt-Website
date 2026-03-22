@@ -7,6 +7,11 @@ const CanvasEditor = () => {
   const canvasRef = useRef(null);
   const { setCanvas, setActiveObject, shirtType, shirtColor, printZone } = useDesignStore();
   const getMockup = useAdminStore(state => state.getMockup); // Admin Sync
+  const fetchMockups = useAdminStore(state => state.fetchMockups);
+
+  useEffect(() => {
+    fetchMockups();
+  }, [fetchMockups]);
 
   useEffect(() => {
     const canvas = new fabric.Canvas(canvasRef.current, {

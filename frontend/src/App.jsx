@@ -64,7 +64,6 @@ function App() {
                 <Route path="/products" element={<Products />} />
                 <Route path="/products/:id" element={<ProductDetails />} />
                 <Route path="/designer" element={<Designer />} />
-                <Route path="/admin" element={<Admin />} /> {/* Testing phase */}
                 
                 {/* Protected Routes */}
                 <Route element={<ProtectedRoute />}>
@@ -79,6 +78,7 @@ function App() {
 
                 {/* Admin Routes */}
                 <Route element={<AdminRoute />}>
+                  <Route path="/admin" element={<Admin />} />
                   <Route path="/admin-legacy" element={<AdminDashboard />} />
                   <Route path="/admin/products" element={<AdminProducts />} />
                   <Route path="/admin/orders" element={<AdminOrders />} />

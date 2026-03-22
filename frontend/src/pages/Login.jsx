@@ -50,10 +50,13 @@ const Login = () => {
     
     setLoading(true);
     try {
-      // For regular users, use API login
       const result = await login(email, password);
       if (result.success) {
-        navigate('/');
+        if (result.data?.role === 'admin') {
+           navigate('/admin');
+        } else {
+           navigate('/');
+        }
       }
     } catch (error) {
       toast.error('Login failed. Please try again.');

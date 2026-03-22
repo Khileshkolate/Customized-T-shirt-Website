@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import useAdminStore from '../store/adminStore';
 import { Camera, RefreshCw, Trash2, ArrowRight, LayoutDashboard, Search, Upload } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -24,9 +24,13 @@ const COLORS = [
 const VIEWS = ['front', 'back'];
 
 const Admin = () => {
-    const { mockups, uploadMockup, removeMockup } = useAdminStore();
+    const { mockups, uploadMockup, removeMockup, fetchMockups, loading } = useAdminStore();
     const fileInputRef = useRef(null);
     const [pendingKey, setPendingKey] = useState(null);
+
+    useEffect(() => {
+        fetchMockups();
+    }, [fetchMockups]);
     
     // Filters
     const [filterType, setFilterType] = useState('all');
@@ -43,16 +47,12 @@ const Admin = () => {
         fileInputRef.current?.click();
     };
 
-    const handleFileChange = (e) => {
+    const handleFileChange = async (e) => {
         const file = e.target.files?.[0];
         if (!file || !pendingKey) return;
         
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            uploadMockup(pendingKey, ev.target.result);
-            setPendingKey(null);
-        };
-        reader.readAsDataURL(file);
+        await uploadMockup(pendingKey, file);
+        setPendingKey(null);
         e.target.value = '';
     };
 

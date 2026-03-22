@@ -46,26 +46,6 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      // Direct admin login (no API call needed)
-      if (email === 'admin@printcraft.com' && password === 'admin123') {
-        const adminUser = {
-          id: 'admin123456',
-          name: 'Admin User',
-          email: 'admin@printcraft.com',
-          phone: '9999999999',
-          role: 'admin',
-          isVerified: true,
-          addresses: []
-        };
-        
-        localStorage.setItem('token', 'admin-jwt-token-12345');
-        localStorage.setItem('user', JSON.stringify(adminUser));
-        setUser(adminUser);
-        setIsAuthenticated(true);
-        
-        return { success: true, data: adminUser };
-      }
-
       // Regular user login (API call)
       const response = await axios.post('/auth/login', { email, password });
       const { token, user: userData } = response.data.data;
@@ -114,10 +94,21 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated,
     register: async (userData) => {
       try {
-        const response = await axios.post('/auth/register', userData);
-        return { success: true, data: response.data.data };
+        const { confirmPassword, ...dataToSend } = userData;
+        const response = await axios.post('/auth/register', dataToSend);
+        const { token, user: newUserData } = response.data.data;
+        
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(newUserData));
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        setUser(newUserData);
+        setIsAuthenticated(true);
+        toast.success('Registration successful!');
+        return { success: true, data: newUserData };
       } catch (error) {
-        return { success: false, error: error.response?.data?.message };
+        const errorMessage = error.response?.data?.message || 'Registration failed';
+        toast.error(errorMessage);
+        return { success: false, error: errorMessage };
       }
     },
     verifyOtp: async (otp, phone) => {
@@ -138,24 +129,6 @@ export const AuthProvider = ({ children }) => {
     logout,
     updateProfile
   };
-  // In your AuthContext.js or wherever register is defined
-const register = async (userData) => {
-  try {
-    // Remove confirmPassword before sending to server
-    const { confirmPassword, ...dataToSend } = userData;
-    
-    const response = await axios.post('/api/auth/register', dataToSend, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    return response.data;
-  } catch (error) {
-    console.error('Registration API error:', error.response?.data || error.message);
-    throw error;
-  }
-};
 
   return (
     <AuthContext.Provider value={value}>
