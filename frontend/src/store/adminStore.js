@@ -1,0 +1,76 @@
+import { create } from 'zustand';
+import { getMockups, uploadMockup, deleteMockup } from '../api/adminApi';
+import toast from 'react-hot-toast';
+
+const BASE_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+
+const useAdminStore = create((set, get) => ({
+  mockups: {},
+  loading: false,
+  error: null,
+
+  fetchMockups: async () => {
+    set({ loading: true, error: null });
+    try {
+      const res = await getMockups();
+      const mockupsData = res.data;
+      const formattedMockups = {};
+
+      mockupsData.forEach(m => {
+        ['front', 'back', 'left', 'right'].forEach(view => {
+          if (m.views && m.views[view]) {
+            const key = `${m.type}_${m.color}_${view}`;
+            formattedMockups[key] = `${BASE_URL}${m.views[view]}`;
+          }
+        });
+      });
+
+      set({ mockups: formattedMockups, loading: false });
+    } catch (error) {
+       console.error('Failed to fetch mockups:', error);
+       toast.error('Failed to connect to backend.');
+       set({ error: error.message, loading: false });
+    }
+  },
+  
+  // `key` is in format "Type_Color_view" (e.g. "Round Neck_White_front")
+  uploadMockup: async (key, file) => {
+    try {
+      const toastId = toast.loading('Uploading Mockup...');
+      const [type, color, view] = key.split('_');
+      
+      const formData = new FormData();
+      formData.append('type', type);
+      formData.append('color', color);
+      formData.append(view, file);
+
+      await uploadMockup(formData);
+      
+      // Re-fetch to get updated URLs
+      await get().fetchMockups();
+      toast.success('Mockup Uploaded', { id: toastId });
+    } catch (error) {
+       console.error('Failed to upload mockup:', error);
+       toast.error(error.response?.data?.message || 'Failed to upload image. Verify admin login.', { id: toastId });
+    }
+  },
+
+  removeMockup: async (key) => {
+    // Note: The UI currently uses this to 'remove an image'. 
+    // The backend mockupController doesn't have a single-view delete, it deletes the whole mockup.
+    // For now, we'll keep the local state clear to match UI behavior, but a full backend view deletion 
+    // requires more controller logic. For now, this just hides it locally until refresh.
+    set((state) => {
+      const newMockups = { ...state.mockups };
+      delete newMockups[key];
+      return { mockups: newMockups };
+    });
+  },
+
+  getMockup: (typeId, colorId, view) => {
+    const key = `${typeId}_${colorId}_${view}`;
+    return get().mockups[key] || null;
+  }
+}));
+
+export default useAdminStore;

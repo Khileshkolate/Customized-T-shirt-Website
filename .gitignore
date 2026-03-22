@@ -1,4 +1,4 @@
-server/node_modules
-server/.env
-Customized-T-shirt-Website/node_modules
-Customized-T-shirt-Website/dist
+backend/node_modules
+backend/.env
+frontend/node_modules
+frontend/dist
