@@ -21,6 +21,7 @@ const ToolPanel = () => {
       shirtColor, setShirtColor,
       printZone, setPrintZone,
       fabric, setFabric,
+      size, setSize,
       addText, addShape, addImage
   } = useDesignStore();
   
@@ -45,7 +46,7 @@ const ToolPanel = () => {
   };
 
   return (
-    <div className="w-[300px] h-full bg-white border-r border-gray-200 text-gray-700 overflow-y-auto custom-scrollbar flex flex-col pt-4 shadow-xl z-20">
+    <div className="w-full lg:w-[300px] h-auto lg:h-full lg:overflow-y-auto bg-white border-b lg:border-b-0 lg:border-r border-gray-200 text-gray-700 custom-scrollbar flex flex-col pt-4 shadow-xl z-20 shrink-0">
       
       {/* Hidden File Input for Image Upload */}
       <input 
@@ -130,6 +131,22 @@ const ToolPanel = () => {
                     <span className="text-[9px] font-black uppercase">{tool.label}</span>
                 </button>
             ))}
+        </div>
+      </div>
+
+      {/* SIZE */}
+      <div className="px-6 mb-8">
+        <h3 className="text-[10px] font-bold tracking-widest text-gray-400 mb-4 uppercase">Size</h3>
+        <div className="flex bg-gray-100 rounded-lg border border-gray-200 p-1">
+          {['S', 'M', 'L', 'XL', 'XXL'].map(s => (
+              <button 
+                key={s}
+                onClick={() => setSize(s)}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${size === s ? 'bg-white border border-gray-200 text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700 border border-transparent'}`}
+              >
+                  {s}
+              </button>
+          ))}
         </div>
       </div>
 

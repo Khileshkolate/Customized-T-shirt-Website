@@ -141,7 +141,7 @@ const importData = async () => {
     await Product.deleteMany(); // Clear existing products
 
     // Fetch the admin user to attach the products to
-    const adminUser = await User.findOne({ email: 'admin@printcraft.com' }) || await User.findOne({});
+    const adminUser = await User.findOne({ email: 'admin@viragkala.com' }) || await User.findOne({});
     
     if (!adminUser) {
         console.log("No user found in DB. Please run seedAdmin.js first to create an admin user.");

@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   User, Mail, Smartphone, MapPin, Edit2, Save, X,
-  Package, CreditCard, Heart, Settings, LogOut
+  Package, CreditCard, Heart, Settings, LogOut, Palette
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import axios from '../utils/axiosInstance';
 import toast from 'react-hot-toast';
 
@@ -87,19 +88,32 @@ const Profile = () => {
               </div>
 
               <div className="space-y-2">
-                <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                <Link to="/orders" className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
                   <Package className="h-5 w-5" />
                   My Orders
-                </button>
-                <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                </Link>
+                <Link to="/designs" className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                  <Palette className="h-5 w-5" />
+                  My Designs
+                </Link>
+                <button 
+                  onClick={() => toast.success('Wishlist coming soon!', { icon: '❤️' })}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                >
                   <Heart className="h-5 w-5" />
                   Wishlist
                 </button>
-                <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                <button 
+                  onClick={() => toast.success('Payment Methods coming soon!', { icon: '💳' })}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                >
                   <CreditCard className="h-5 w-5" />
                   Payment Methods
                 </button>
-                <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                <button 
+                  onClick={() => toast.success('Settings coming soon!', { icon: '⚙️' })}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                >
                   <Settings className="h-5 w-5" />
                   Settings
                 </button>

@@ -1,4 +1,5 @@
 /** @type {import('tailwindcss').Config} */
+// Force Vite HMR
 export default {
   content: [
     "./index.html",
