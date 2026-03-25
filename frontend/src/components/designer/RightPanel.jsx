@@ -60,7 +60,7 @@ const RightPanel = () => {
   };
 
   return (
-    <div className="w-[300px] h-full bg-white border-l border-gray-200 text-gray-700 flex flex-col shadow-xl z-20">
+    <div className="w-full lg:w-[300px] h-auto lg:h-full lg:overflow-y-auto bg-white border-t lg:border-t-0 lg:border-l border-gray-200 text-gray-700 flex flex-col shadow-xl z-20 shrink-0">
       
       {/* SCROLLABLE UPPER SECTION */}
       <div className="flex-1 overflow-y-auto p-6 space-y-10 custom-scrollbar">

@@ -18,7 +18,7 @@ const Login = () => {
     const adminUser = {
       id: 'admin123456',
       name: 'Admin User',
-      email: 'admin@printcraft.com',
+      email: 'admin@viragkala.com',
       phone: '9999999999',
       role: 'admin',
       isVerified: true,
@@ -42,7 +42,7 @@ const Login = () => {
     e.preventDefault();
     
     // Check for admin credentials
-    if (email === 'admin@printcraft.com' && password === 'admin123') {
+    if (email === 'admin@viragkala.com' && password === 'admin123') {
       setLoading(true);
       handleAdminLogin();
       return;

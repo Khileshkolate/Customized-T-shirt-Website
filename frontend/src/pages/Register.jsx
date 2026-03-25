@@ -165,7 +165,7 @@ const Register = () => {
       <div className="max-w-md mx-auto">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 text-primary-600 font-bold text-xl">
-            PrintCraft
+            ViragKala
           </Link>
           <h1 className="text-3xl font-bold mt-4">Create Account</h1>
           <p className="text-gray-600 mt-2">Join our creative community</p>

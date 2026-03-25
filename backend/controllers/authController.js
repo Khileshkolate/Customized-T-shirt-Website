@@ -21,7 +21,7 @@ const registerUser = async (req, res) => {
             return res.status(400).json({ success: false, message: 'User already exists' });
         }
 
-        const role = email === 'admin@printcraft.com' ? 'admin' : 'user';
+        const role = email === 'admin@viragkala.com' ? 'admin' : 'user';
 
         const user = await User.create({
             name,

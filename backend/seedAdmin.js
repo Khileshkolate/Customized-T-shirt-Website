@@ -16,7 +16,7 @@ const seedAdmin = async () => {
         await Mockup.createCollection();
         console.log('✅ Collections initialized');
 
-        const adminEmail = 'admin@printcraft.com';
+        const adminEmail = 'admin@viragkala.com';
         
         // Remove existing admin if any
         await User.deleteMany({ email: adminEmail });
@@ -33,7 +33,7 @@ const seedAdmin = async () => {
 
         await adminUser.save();
         console.log('✅ Admin user seeded successfully!');
-        console.log('⚠️  Email: admin@printcraft.com');
+        console.log('⚠️  Email: admin@viragkala.com');
         console.log('⚠️  Password: password123');
 
         process.exit();

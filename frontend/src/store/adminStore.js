@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { getMockups, uploadMockup, deleteMockup } from '../api/adminApi';
 import toast from 'react-hot-toast';
 
-const BASE_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+const BASE_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || '';
 
 const useAdminStore = create((set, get) => ({
   mockups: {},

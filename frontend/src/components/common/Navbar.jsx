@@ -233,6 +233,7 @@
 //   const searchRef = useRef(null)
 //   const searchInputRef = useRef(null)
 
+
 //   const navLinks = [
 //     { name: 'Home', path: '/', icon: <Sparkles className="h-4 w-4" /> },
 //     { name: 'Products', path: '/products', icon: <Package className="h-4 w-4" /> },
@@ -322,7 +323,7 @@
 //               <Palette className="h-8 w-8 text-primary-600 group-hover:text-primary-700 transition-colors" />
 //             </motion.div>
 //             <span className="text-2xl font-bold text-gray-900 tracking-tight">
-//               Print<span className="text-primary-600 group-hover:text-primary-700 transition-colors">Craft</span>
+//               Virag<span className="text-primary-600 group-hover:text-primary-700 transition-colors">Kala</span>
 //             </span>
 //           </Link>
 
@@ -746,6 +747,7 @@ const Navbar = () => {
   const searchRef = useRef(null)
   const searchInputRef = useRef(null)
   const searchTimeoutRef = useRef(null)
+  const isAdmin = user?.role === 'admin';
 
   const navLinks = [
     { name: 'Home', path: '/', icon: <Home className="h-4 w-4" /> },
@@ -900,154 +902,160 @@ const Navbar = () => {
               <Palette className="h-8 w-8 text-primary-600 group-hover:text-primary-700 transition-colors" />
             </motion.div>
             <span className="text-2xl font-bold text-gray-900 tracking-tight hidden sm:block">
-              Print<span className="text-primary-600 group-hover:text-primary-700 transition-colors">Craft</span>
+              Virag<span className="text-primary-600 group-hover:text-primary-700 transition-colors">Kala</span>
             </span>
           </Link>
 
           {/* Desktop Navigation with Search */}
-          <div className="hidden lg:flex items-center gap-4 flex-1 max-w-3xl mx-6">
-            {navLinks.map((link, index) => (
-              <motion.div
-                key={link.name}
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <Link
-                  to={link.path}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-gray-700 hover:text-primary-600 hover:bg-primary-50 font-medium transition-all duration-200 group"
-                  onClick={() => setIsSearchOpen(false)}
+          {!isAdmin && (
+            <div className="hidden lg:flex items-center gap-4 flex-1 max-w-3xl mx-6">
+              {navLinks.map((link, index) => (
+                <motion.div
+                  key={link.name}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
                 >
-                  <span className="text-primary-600 opacity-80 group-hover:opacity-100 transition-opacity">
-                    {link.icon}
-                  </span>
-                  <span>{link.name}</span>
-                </Link>
-              </motion.div>
-            ))}
-
-            {/* Search Box */}
-            <div className="relative flex-1 max-w-xl" ref={searchRef}>
-              <form onSubmit={handleSearchSubmit} className="relative">
-                <motion.div 
-                  className="relative"
-                  whileFocus={{ scale: 1.01 }}
-                >
-                  <input
-                    ref={searchInputRef}
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onFocus={() => {
-                      setIsSearchFocused(true)
-                      setIsSearchOpen(true)
-                    }}
-                    placeholder="Search products, designs, categories..."
-                    className="w-full pl-12 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 placeholder-gray-500 transition-all duration-200 hover:bg-gray-100"
-                  />
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  {isSearching ? (
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                      <div className="h-4 w-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
-                    </div>
-                  ) : searchQuery ? (
-                    <motion.button
-                      type="button"
-                      onClick={handleClearSearch}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      <X className="h-4 w-4" />
-                    </motion.button>
-                  ) : null}
+                  <Link
+                    to={link.path}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-gray-700 hover:text-primary-600 hover:bg-primary-50 font-medium transition-all duration-200 group"
+                    onClick={() => setIsSearchOpen(false)}
+                  >
+                    <span className="text-primary-600 opacity-80 group-hover:opacity-100 transition-opacity">
+                      {link.icon}
+                    </span>
+                    <span>{link.name}</span>
+                  </Link>
                 </motion.div>
+              ))}
 
-                {/* Search Suggestions Dropdown */}
-                <AnimatePresence>
-                  {isSearchOpen && isSearchFocused && searchSuggestions.length > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 8, scale: 0.98 }}
-                      className="absolute top-full mt-2 w-full bg-white rounded-xl shadow-xl border border-gray-200 py-3 z-50 overflow-hidden"
-                    >
-                      <div className="px-3 pb-2 border-b border-gray-100">
-                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          {searchQuery ? 'Search Results' : 'Popular Searches'}
-                        </p>
+              {/* Search Box */}
+              <div className="relative flex-1 max-w-xl" ref={searchRef}>
+                <form onSubmit={handleSearchSubmit} className="relative">
+                  <motion.div 
+                    className="relative"
+                    whileFocus={{ scale: 1.01 }}
+                  >
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onFocus={() => {
+                        setIsSearchFocused(true)
+                        setIsSearchOpen(true)
+                      }}
+                      placeholder="Search products, designs, categories..."
+                      className="w-full pl-12 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 placeholder-gray-500 transition-all duration-200 hover:bg-gray-100"
+                    />
+                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    {isSearching ? (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <div className="h-4 w-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
                       </div>
-                      <div className="max-h-64 overflow-y-auto">
-                        {searchSuggestions.map((suggestion, index) => (
-                          <motion.button
-                            key={`${suggestion.name}-${index}`}
-                            initial={{ opacity: 0, x: -5 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.05 }}
-                            type="button"
-                            onClick={() => handleSuggestionClick(suggestion)}
-                            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-primary-50 transition-colors text-left group"
-                          >
-                            <div className="p-2 bg-primary-100 rounded-lg group-hover:bg-primary-200 transition-colors">
-                              {suggestion.icon}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium text-gray-900 group-hover:text-primary-700 truncate">
-                                {suggestion.name}
-                              </div>
-                              <div className="text-sm text-gray-500 truncate">
-                                {suggestion.category}
-                              </div>
-                            </div>
-                            <ChevronDown className="h-4 w-4 text-gray-300 group-hover:text-primary-400 transform -rotate-90" />
-                          </motion.button>
-                        ))}
-                      </div>
-                      {searchQuery && (
-                        <div className="border-t border-gray-100 pt-2 px-4">
-                          <button
-                            type="submit"
-                            className="w-full text-center py-2.5 bg-primary-50 text-primary-700 rounded-lg hover:bg-primary-100 transition-colors font-medium"
-                          >
-                            Search for "{searchQuery}"
-                          </button>
+                    ) : searchQuery ? (
+                      <motion.button
+                        type="button"
+                        onClick={handleClearSearch}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                      >
+                        <X className="h-4 w-4" />
+                      </motion.button>
+                    ) : null}
+                  </motion.div>
+
+                  {/* Search Suggestions Dropdown */}
+                  <AnimatePresence>
+                    {isSearchOpen && isSearchFocused && searchSuggestions.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                        className="absolute top-full mt-2 w-full bg-white rounded-xl shadow-xl border border-gray-200 py-3 z-50 overflow-hidden"
+                      >
+                        <div className="px-3 pb-2 border-b border-gray-100">
+                          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {searchQuery ? 'Search Results' : 'Popular Searches'}
+                          </p>
                         </div>
-                      )}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </form>
+                        <div className="max-h-64 overflow-y-auto">
+                          {searchSuggestions.map((suggestion, index) => (
+                            <motion.button
+                              key={`${suggestion.name}-${index}`}
+                              initial={{ opacity: 0, x: -5 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: index * 0.05 }}
+                              type="button"
+                              onClick={() => handleSuggestionClick(suggestion)}
+                              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-primary-50 transition-colors text-left group"
+                            >
+                              <div className="p-2 bg-primary-100 rounded-lg group-hover:bg-primary-200 transition-colors">
+                                {suggestion.icon}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium text-gray-900 group-hover:text-primary-700 truncate">
+                                  {suggestion.name}
+                                </div>
+                                <div className="text-sm text-gray-500 truncate">
+                                  {suggestion.category}
+                                </div>
+                              </div>
+                              <ChevronDown className="h-4 w-4 text-gray-300 group-hover:text-primary-400 transform -rotate-90" />
+                            </motion.button>
+                          ))}
+                        </div>
+                        {searchQuery && (
+                          <div className="border-t border-gray-100 pt-2 px-4">
+                            <button
+                              type="submit"
+                              className="w-full text-center py-2.5 bg-primary-50 text-primary-700 rounded-lg hover:bg-primary-100 transition-colors font-medium"
+                            >
+                              Search for "{searchQuery}"
+                            </button>
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </form>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-2 sm:gap-3">
             {/* Mobile Search Button */}
-            <motion.button
-              onClick={handleSearchClick}
-              className="lg:hidden p-2.5 hover:bg-gray-100 rounded-xl transition-colors"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Search className="h-5 w-5 sm:h-6 sm:w-6 text-gray-700" />
-            </motion.button>
-
-            {/* Cart */}
-            <Link 
-              to="/cart" 
-              className="relative p-2.5 hover:bg-gray-100 rounded-xl transition-colors group"
-              onClick={handleNavigation}
-            >
-              <motion.div
+            {!isAdmin && (
+              <motion.button
+                onClick={handleSearchClick}
+                className="lg:hidden p-2.5 hover:bg-gray-100 rounded-xl transition-colors"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6 text-gray-700 group-hover:text-primary-600 transition-colors" />
-              </motion.div>
-              <span className="absolute -top-1 -right-1 h-5 w-5 bg-primary-600 text-white text-xs rounded-full flex items-center justify-center font-bold shadow-sm">
-                3
-              </span>
-            </Link>
+                <Search className="h-5 w-5 sm:h-6 sm:w-6 text-gray-700" />
+              </motion.button>
+            )}
+
+            {/* Cart */}
+            {!isAdmin && (
+              <Link 
+                to="/cart" 
+                className="relative p-2.5 hover:bg-gray-100 rounded-xl transition-colors group"
+                onClick={handleNavigation}
+              >
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6 text-gray-700 group-hover:text-primary-600 transition-colors" />
+                </motion.div>
+                <span className="absolute -top-1 -right-1 h-5 w-5 bg-primary-600 text-white text-xs rounded-full flex items-center justify-center font-bold shadow-sm">
+                  3
+                </span>
+              </Link>
+            )}
 
             {/* User Menu */}
             {isAuthenticated ? (
@@ -1251,7 +1259,7 @@ const Navbar = () => {
               className="lg:hidden border-t border-gray-100"
             >
               <div className="py-4 space-y-1">
-                {navLinks.map((link) => (
+                {!isAdmin && navLinks.map((link) => (
                   <Link
                     key={link.name}
                     to={link.path}

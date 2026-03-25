@@ -15,6 +15,8 @@ const CanvasEditor = () => {
     fetchMockups();
   }, [fetchMockups]);
 
+  const historyTimeoutRef = useRef(null);
+
   // Visual rep color fallback
   const getSimulatedColor = () => {
       if (shirtColor === 'White' || shirtColor === 'Off White') return '#f1f5f9';
@@ -73,42 +75,61 @@ const CanvasEditor = () => {
     setCanvas(canvas);
     
     // Capture initial state for undo
-    setTimeout(() => saveHistory(), 100);
+    if (historyTimeoutRef.current) clearTimeout(historyTimeoutRef.current);
+    historyTimeoutRef.current = setTimeout(() => {
+        if (canvas && !canvas._isDisposed) saveHistory();
+    }, 100);
 
     return () => {
+      if (historyTimeoutRef.current) clearTimeout(historyTimeoutRef.current);
       canvas.dispose();
+      canvas._isDisposed = true; // Manual flag for extra safety
       setCanvas(null);
     };
   }, [setCanvas, setActiveObject, printZone, saveHistory]);
 
   // Mount Mockup Image DIRECTLY into Fabric.js Background Layer!
   // This solves exporting and Add to Cart issues!
-  useEffect(() => {
-      if (!storeCanvas) return;
-      if (customImg) {
-          fabric.Image.fromURL(
-              customImg, 
-              (img) => {
-                  const scale = Math.min(480 / img.width, 520 / img.height);
-                  img.set({
-                      scaleX: scale,
-                      scaleY: scale,
-                      originX: 'center',
-                      originY: 'center',
-                      left: 240, // 480 / 2
-                      top: 260  // 520 / 2
-                  });
-                  storeCanvas.setBackgroundImage(img, storeCanvas.renderAll.bind(storeCanvas));
-              },
-              { crossOrigin: 'anonymous' }
-          );
-      } else {
-          storeCanvas.setBackgroundImage(null, storeCanvas.renderAll.bind(storeCanvas));
-      }
-  }, [storeCanvas, customImg]);
+    useEffect(() => {
+        if (!storeCanvas || storeCanvas._isDisposed) return;
+        
+        let isEffectMounted = true;
+
+        const handleSetBackground = () => {
+            if (!isEffectMounted || !storeCanvas || storeCanvas._isDisposed) return;
+            storeCanvas.renderAll();
+        };
+
+        if (customImg) {
+            fabric.Image.fromURL(
+                customImg, 
+                (img) => {
+                    if (!isEffectMounted || !storeCanvas || storeCanvas._isDisposed) return;
+                    
+                    const scale = Math.min(480 / img.width, 520 / img.height);
+                    img.set({
+                        scaleX: scale,
+                        scaleY: scale,
+                        originX: 'center',
+                        originY: 'center',
+                        left: 240,
+                        top: 260
+                    });
+                    storeCanvas.setBackgroundImage(img, handleSetBackground);
+                },
+                { crossOrigin: 'anonymous' }
+            );
+        } else {
+            storeCanvas.setBackgroundImage(null, handleSetBackground);
+        }
+
+        return () => {
+            isEffectMounted = false;
+        };
+    }, [storeCanvas, customImg]);
 
   return (
-    <div className="flex-1 w-full h-full flex flex-col items-center justify-center relative bg-gray-100 overflow-hidden z-0 shadow-inner">
+    <div className="flex-1 w-full min-h-[500px] lg:h-full flex flex-col items-center justify-center relative bg-gray-100 overflow-hidden z-0 shadow-inner shrink-0">
       
       {/* Workspace Zoom Controls */}
       <div className="absolute top-6 right-6 flex bg-white rounded-lg shadow-sm border border-gray-200 z-50 overflow-hidden">

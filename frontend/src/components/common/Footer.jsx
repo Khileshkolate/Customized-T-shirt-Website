@@ -8,7 +8,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Company Info */}
           <div>
-            <h3 className="text-2xl font-bold mb-4">PrintCraft</h3>
+            <h3 className="text-2xl font-bold mb-4">ViragKala</h3>
             <p className="text-gray-400 mb-4">
               Create custom T-shirts, mugs, and gifts with our easy-to-use design studio.
             </p>
@@ -55,7 +55,7 @@ const Footer = () => {
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="h-5 w-5" />
-                <span>support@printcraft.com</span>
+                <span>support@viragkala.com</span>
               </li>
               <li className="flex items-center gap-2">
                 <MapPin className="h-5 w-5" />
@@ -67,7 +67,7 @@ const Footer = () => {
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center">
           <p className="text-gray-400">
-            &copy; 2026 PrintCraft. Designed and Devloped by Digital Krishii Team.
+            &copy; 2026 ViragKala. Designed and Devloped by Digital Krishii Team.
           </p>
         </div>
       </div>

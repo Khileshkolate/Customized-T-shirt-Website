@@ -63,21 +63,7 @@ const Admin = () => {
         <div className="min-h-screen bg-gray-50 text-gray-800 font-sans pb-20">
             
             {/* Navbar */}
-            <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-8 shadow-sm shrink-0 sticky top-0 z-30">
-                <div className="flex items-center space-x-2">
-                    <LayoutDashboard className="w-6 h-6 text-indigo-600" />
-                    <span className="text-xl font-extrabold text-[#1e1b4b] tracking-tight">PrintCraft Admin</span>
-                </div>
-                <div className="flex bg-gray-100 rounded-full border border-gray-200 p-1">
-                    <div className="px-6 py-1.5 rounded-full text-[11px] uppercase tracking-wider font-bold bg-white text-indigo-600 border border-gray-200 shadow-sm">Admin Panel</div>
-                    <Link to="/designer" className="px-6 py-1.5 rounded-full text-xs font-semibold text-gray-500 hover:text-gray-900 transition-colors">Designer</Link>
-                </div>
-                <div>
-                     <Link to="/designer" className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-all shadow-md">
-                        Open Designer <ArrowRight size={16} />
-                    </Link>
-                </div>
-            </header>
+
 
             <main className="max-w-7xl mx-auto px-8 mt-10">
                 

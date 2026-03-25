@@ -197,7 +197,7 @@ const useDesignStore = create((set, get) => ({
             
             const dataURL = canvas.toDataURL({ format: 'png', quality: 1, multiplier: 2 });
             const link = document.createElement('a');
-            link.download = 'printcraft-design.png';
+            link.download = 'viragkala-design.png';
             link.href = dataURL;
             document.body.appendChild(link);
             link.click();

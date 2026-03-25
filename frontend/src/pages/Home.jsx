@@ -19,7 +19,9 @@ import {
   Mail,
   Phone,
   MapPin,
-  ChevronRight
+  ChevronRight,
+  Package,
+  Headphones
 } from 'lucide-react'
 
 const Home = () => {
@@ -189,10 +191,10 @@ const Home = () => {
   ]
 
   const companyStats = [
-    { value: '50+', label: 'Product Categories' },
-    { value: '100+', label: 'Cities Served' },
-    { value: '24/7', label: 'Customer Support' },
-    { value: '99%', label: 'On-time Delivery' }
+    { icon: <Package className="h-8 w-8 text-white/80" />, value: '50+', label: 'Product Categories' },
+    { icon: <MapPin className="h-8 w-8 text-white/80" />, value: '100+', label: 'Cities Served' },
+    { icon: <Headphones className="h-8 w-8 text-white/80" />, value: '24/7', label: 'Customer Support' },
+    { icon: <Truck className="h-8 w-8 text-white/80" />, value: '99%', label: 'On-time Delivery' }
   ]
 
   if (loading) return (
@@ -212,12 +214,9 @@ const Home = () => {
           <div className="absolute right-1/4 bottom-1/4 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl" />
         </div>
         
-        <div className="relative container mx-auto px-4 py-24 md:py-32">
+        <div className="relative container mx-auto px-4 pt-10 pb-24 md:pt-16 md:pb-32">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full mb-6">
-              <Sparkles className="h-4 w-4" />
-              <span className="text-sm">AI-Powered Design Studio Launch 🎉</span>
-            </div>
+
             
             <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight animate-fade-up">
               Wear Your <span className="text-secondary-400 animate-pulse">Story</span>
@@ -249,9 +248,14 @@ const Home = () => {
 
             <div className="flex items-center gap-6">
               <div className="flex -space-x-4">
-                {[1, 2, 3, 4].map((i) => (
+                {[
+                  "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop&crop=face",
+                  "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face",
+                  "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face",
+                  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=face"
+                ].map((imgUrl, i) => (
                   <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-gray-300 overflow-hidden">
-                    <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500" />
+                    <img src={imgUrl} alt="Creator" className="w-full h-full object-cover" />
                   </div>
                 ))}
               </div>
@@ -323,7 +327,7 @@ const Home = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Why Choose PrintCraft?
+              Why Choose ViragKala?
             </h2>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto">
               Everything you need to create amazing custom products

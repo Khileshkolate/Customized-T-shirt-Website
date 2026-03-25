@@ -175,18 +175,18 @@ const AdminSidebar = () => {
         <div className="flex items-center justify-between">
           {!collapsed && (
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="font-bold text-xl">PC</span>
+              <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                <span className="font-bold text-xl">VK</span>
               </div>
               <div>
-                <span className="text-xl font-bold">PrintCraft</span>
+                <span className="text-xl font-bold">ViragKala</span>
                 <div className="text-xs text-gray-400 mt-0.5">Admin Panel</div>
               </div>
             </div>
           )}
           {collapsed && (
-            <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg mx-auto">
-              <span className="font-bold text-lg">PC</span>
+            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg mx-auto">
+              <span className="font-bold text-lg">VK</span>
             </div>
           )}
           <button
@@ -266,7 +266,7 @@ const AdminSidebar = () => {
           {!collapsed && (
             <div className="flex-1 min-w-0">
               <div className="font-medium truncate">{user?.name || 'Admin User'}</div>
-              <div className="text-xs text-gray-400 truncate">{user?.email || 'admin@printcraft.com'}</div>
+              <div className="text-xs text-gray-400 truncate">{user?.email || 'admin@viragkala.com'}</div>
             </div>
           )}
         </div>

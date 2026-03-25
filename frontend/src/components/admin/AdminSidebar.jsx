@@ -9,7 +9,8 @@ import {
   Settings,
   LogOut,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Camera
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -24,6 +25,7 @@ const AdminSidebar = () => {
     { path: '/admin/orders', label: 'Orders', icon: <ShoppingBag className="h-5 w-5" /> },
     { path: '/admin/users', label: 'Users', icon: <Users className="h-5 w-5" /> },
     { path: '/admin/designs', label: 'Designs', icon: <Palette className="h-5 w-5" /> },
+    { path: '/admin/mockups', label: 'Mockups', icon: <Camera className="h-5 w-5" /> },
     { path: '/admin/settings', label: 'Settings', icon: <Settings className="h-5 w-5" /> },
   ];
 
@@ -42,11 +44,13 @@ const AdminSidebar = () => {
           <div className="flex items-center justify-between">
             {!collapsed && (
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-purple-600 rounded-lg flex items-center justify-center">
-                  <span className="font-bold">P</span>
-                </div>
-                <span className="text-xl font-bold">PrintCraft</span>
+                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                <span className="font-bold text-xl text-white">VK</span>
               </div>
+              <div>
+                <span className="text-xl font-bold">ViragKala</span>
+              </div>
+            </div>
             )}
             <button
               onClick={() => setCollapsed(!collapsed)}
@@ -86,12 +90,12 @@ const AdminSidebar = () => {
           {!collapsed && (
             <div className="mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-full flex items-center justify-center">
-                  <span className="font-bold text-white">A</span>
-                </div>
+                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg mx-auto">
+              <span className="font-bold text-lg text-white">VK</span>
+            </div>
                 <div>
                   <div className="font-medium">Admin User</div>
-                  <div className="text-sm text-gray-400">admin@printcraft.com</div>
+                  <div className="text-sm text-gray-400">admin@viragkala.com</div>
                 </div>
               </div>
             </div>
