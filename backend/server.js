@@ -2,53 +2,51 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
-const mongoose = require("mongoose");
-
-// Route files
-const authRoutes = require('./routes/authRoutes');
-const designRoutes = require('./routes/designRoutes');
-const mockupRoutes = require('./routes/mockupRoutes');
 
 // Load env vars
 dotenv.config();
 
-const app = express(); 
+// Connect to database
+connectDB();
+
+const app = express();
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// Database connection
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/custom_printing_db')
-.then(() => console.log('✅ MongoDB Connected'))
-.catch(err => console.error('❌ MongoDB Connection Error:', err));
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    success: false,
-    message: 'Something went wrong!',
-    error: process.env.NODE_ENV === 'development' ? err.message : {}
-  });
+// Request logger
+app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    next();
 });
 
-// Serve uploads statically
-const path = require('path');
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
 // Main Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/designs', designRoutes);
-app.use('/api/mockups', mockupRoutes);
+app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/orders', require('./routes/orderRoutes'));
+app.use('/api/users', require('./routes/adminRoutes'));
+app.use('/api/designs', require('./routes/designRoutes'));
+app.use('/api/mockups', require('./routes/mockupRoutes'));
 
+// Serve static files
+app.use('/uploads', express.static('uploads'));
 
+// Root endpoint
 app.get('/', (req, res) => {
     res.send('API is running...');
 });
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({
+        success: false,
+        message: 'Something went wrong!',
+        error: process.env.NODE_ENV === 'development' ? err.message : {}
+    });
+});
+
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`));

@@ -33,9 +33,7 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(true);
         
         // Set axios headers for API calls
-        if (storedToken.startsWith('admin')) {
-          axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
-        }
+        axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
       }
     } catch (error) {
       console.error('Check user error:', error);

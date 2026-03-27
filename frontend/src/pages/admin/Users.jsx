@@ -83,6 +83,21 @@ const AdminUsers = () => {
     }
   };
 
+  const promoteToAdmin = async (userId) => {
+    if (!window.confirm('Are you sure you want to promote this user to Admin?')) {
+      return;
+    }
+
+    try {
+      await axios.put(`/users/${userId}/role`, { role: 'admin' });
+      toast.success('User promoted to Admin successfully');
+      fetchUsers(); // Refresh list
+    } catch (error) {
+      console.error('Error promoting user:', error);
+      toast.error('Failed to promote user');
+    }
+  };
+
   const userColumns = [
     { key: 'user', label: 'User' },
     { key: 'contact', label: 'Contact' },
@@ -161,7 +176,7 @@ const AdminUsers = () => {
         
         {user.role !== 'admin' && (
           <button
-            onClick={() => {/* Implement promote to admin */}}
+            onClick={() => promoteToAdmin(user._id)}
             className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg"
             title="Make Admin"
           >

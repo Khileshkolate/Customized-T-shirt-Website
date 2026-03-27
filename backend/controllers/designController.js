@@ -1,59 +1,75 @@
 const Design = require('../models/Design');
 
-// @desc    Create new design
+// @desc    Get all designs
+// @route   GET /api/designs
+// @access  Private/Admin
+const getDesigns = async (req, res) => {
+    try {
+        const designs = await Design.find({}).populate('user', 'name email');
+        res.json({
+            success: true,
+            data: designs
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+};
+
+// @desc    Get user designs
+// @route   GET /api/designs/my
+// @access  Private
+const getMyDesigns = async (req, res) => {
+    try {
+        const designs = await Design.find({ user: req.user._id });
+        res.json({
+            success: true,
+            data: designs
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+};
+
+// @desc    Create a design
 // @route   POST /api/designs
 // @access  Private
 const createDesign = async (req, res) => {
     try {
-        const { name, canvasData, thumbnail, color } = req.body;
-
-        if (!canvasData) {
-            return res.status(400).json({ success: false, message: 'No canvas data provided' });
-        }
-
-        const design = new Design({
+        const { name, type, canvasData, elements, isPublic, previewImage } = req.body;
+        const design = await Design.create({
             user: req.user._id,
-            name: name || 'Untitled Design',
+            name,
+            type,
             canvasData,
-            thumbnail,
-            color
+            elements,
+            isPublic,
+            previewImage
         });
-
-        const createdDesign = await design.save();
-        res.status(201).json({ success: true, data: createdDesign });
-
+        res.status(201).json({
+            success: true,
+            data: design
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
 
-// @desc    Get logged in user designs
-// @route   GET /api/designs
+// @desc    Delete a design
+// @route   DELETE /api/designs/:id
 // @access  Private
-const getMyDesigns = async (req, res) => {
-    try {
-        const designs = await Design.find({ user: req.user._id }).sort({ createdAt: -1 });
-        res.json({ success: true, count: designs.length, data: designs });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, message: 'Server Error' });
-    }
-};
-
-// @desc    Get design by ID
-// @route   GET /api/designs/:id
-// @access  Private
-const getDesignById = async (req, res) => {
+const deleteDesign = async (req, res) => {
     try {
         const design = await Design.findById(req.params.id);
-
         if (design) {
-            // Check if user is owner
-            if (design.user.toString() !== req.user._id.toString()) {
-                return res.status(401).json({ success: false, message: 'Not authorized to view this design' });
+            // Check ownership unless admin
+            if (design.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+                return res.status(401).json({ success: false, message: 'Not authorized' });
             }
-            res.json({ success: true, data: design });
+            await design.deleteOne();
+            res.json({ success: true, message: 'Design removed' });
         } else {
             res.status(404).json({ success: false, message: 'Design not found' });
         }
@@ -64,7 +80,8 @@ const getDesignById = async (req, res) => {
 };
 
 module.exports = {
-    createDesign,
+    getDesigns,
     getMyDesigns,
-    getDesignById
+    createDesign,
+    deleteDesign
 };

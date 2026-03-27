@@ -1,4 +1,11 @@
 {
+  "scripts": {
+    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "backend": "cd backend && npm run dev",
+    "frontend": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "preview": "cd frontend && npm run preview"
+  },
   "dependencies": {
     "mongodb": "^7.1.0",
     "mongoose": "^9.3.1"

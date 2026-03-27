@@ -2,12 +2,14 @@ import axiosInstance from '../utils/axiosInstance'
 
 const designApi = {
   saveDesign: async (designData) => {
-    const response = await axiosInstance.post('/designs/save', designData)
+    // Backend expects POST /api/designs
+    const response = await axiosInstance.post('/designs', designData)
     return response.data
   },
 
   getUserDesigns: async () => {
-    const response = await axiosInstance.get('/designs/user')
+    // Backend expects GET /api/designs/my
+    const response = await axiosInstance.get('/designs/my')
     return response.data
   },
 

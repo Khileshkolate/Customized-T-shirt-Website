@@ -1,83 +1,52 @@
 const mongoose = require('mongoose');
 
-const reviewSchema = mongoose.Schema(
-  {
-    name: { type: String, required: true },
-    rating: { type: Number, required: true },
-    comment: { type: String, required: true },
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      ref: 'User',
-    },
-  },
-  {
-    timestamps: true,
-  }
-);
-
-const productSchema = mongoose.Schema(
-  {
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      ref: 'User', // Admin user who created the product
-    },
+const productSchema = new mongoose.Schema({
     name: {
-      type: String,
-      required: true,
+        type: String,
+        required: [true, 'Please add a product name'],
+        trim: true
     },
     description: {
-      type: String,
-      required: true,
+        type: String,
+        required: [true, 'Please add a description']
     },
     price: {
-      type: Number,
-      required: true,
-      default: 0,
+        type: Number,
+        required: [true, 'Please add a price']
     },
     discountPrice: {
-      type: Number,
-      default: 0,
-    },
-    type: {
-      type: String,
-      required: true,
+        type: Number
     },
     category: {
-      type: String,
-      required: true,
+        type: String,
+        required: [true, 'Please add a category']
     },
-    rating: {
-      type: Number,
-      required: true,
-      default: 0,
+    type: {
+        type: String,
+        required: [true, 'Please add a product type (e.g., t-shirt, mug)']
     },
-    numReviews: {
-      type: Number,
-      required: true,
-      default: 0,
-    },
-    reviews: [reviewSchema],
-    tags: [String],
+    images: [{
+        url: String,
+        publicId: String
+    }],
     colors: [String],
     sizes: [String],
-    images: [
-      {
-        url: { type: String, required: true },
-      }
-    ],
     countInStock: {
-      type: Number,
-      required: true,
-      default: 0,
+        type: Number,
+        required: [true, 'Please add count in stock'],
+        default: 0
     },
-  },
-  {
-    timestamps: true,
-  }
-);
+    rating: {
+        type: Number,
+        default: 0
+    },
+    numReviews: {
+        type: Number,
+        default: 0
+    },
+    tags: [String]
+}, {
+    timestamps: true
+});
 
-const Product = mongoose.model('Product', productSchema);
-
-module.exports = Product;
+module.exports = mongoose.model('Product', productSchema);

@@ -14,11 +14,12 @@ const MyDesigns = () => {
 
     const fetchDesigns = async () => {
         try {
-            const response = await axios.get('/designs/my-designs');
+            // Updated to match backend route: /api/designs/my
+            const response = await axios.get('/designs/my');
             setDesigns(response.data.data || []);
         } catch (error) {
             console.error('Error fetching designs:', error);
-            // toast.error('Failed to load designs');
+            toast.error('Failed to load designs. Check your connection.');
         } finally {
             setLoading(false);
         }

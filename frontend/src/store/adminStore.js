@@ -17,18 +17,15 @@ const useAdminStore = create((set, get) => ({
       const formattedMockups = {};
 
       mockupsData.forEach(m => {
-        ['front', 'back', 'left', 'right'].forEach(view => {
-          if (m.views && m.views[view]) {
-            const key = `${m.type}_${m.color}_${view}`;
-            formattedMockups[key] = `${BASE_URL}${m.views[view]}`;
-          }
-        });
+        const key = m.key;
+        formattedMockups[key] = m.imageUrl;
       });
 
       set({ mockups: formattedMockups, loading: false });
     } catch (error) {
        console.error('Failed to fetch mockups:', error);
-       toast.error('Failed to connect to backend.');
+       const message = error.response?.data?.message || 'Failed to connect to backend. Is the server running?';
+       toast.error(message);
        set({ error: error.message, loading: false });
     }
   },
@@ -40,9 +37,8 @@ const useAdminStore = create((set, get) => ({
       const [type, color, view] = key.split('_');
       
       const formData = new FormData();
-      formData.append('type', type);
-      formData.append('color', color);
-      formData.append(view, file);
+      formData.append('key', key);
+      formData.append('image', file);
 
       await uploadMockup(formData);
       

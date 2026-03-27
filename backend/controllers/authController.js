@@ -1,12 +1,5 @@
-const User = require('../models/User');
 const jwt = require('jsonwebtoken');
-
-// Generate JWT
-const generateToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: '30d',
-    });
-};
+const User = require('../models/User');
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
@@ -21,26 +14,21 @@ const registerUser = async (req, res) => {
             return res.status(400).json({ success: false, message: 'User already exists' });
         }
 
-        const role = email === 'admin@viragkala.com' ? 'admin' : 'user';
-
         const user = await User.create({
             name,
             email,
             password,
-            phone,
-            role
+            phone
         });
 
         if (user) {
             res.status(201).json({
                 success: true,
                 data: {
-                    user: {
-                        _id: user._id,
-                        name: user.name,
-                        email: user.email,
-                        role: user.role
-                    },
+                    _id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role,
                     token: generateToken(user._id)
                 }
             });
@@ -49,7 +37,7 @@ const registerUser = async (req, res) => {
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ success: false, message: 'Server Error' });
+        res.status(500).json({ success: false, message: 'Server Error', error: error.message });
     }
 };
 
@@ -60,7 +48,7 @@ const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email }).select('+password');
 
         if (user && (await user.matchPassword(password))) {
             res.json({
@@ -70,7 +58,9 @@ const loginUser = async (req, res) => {
                         _id: user._id,
                         name: user.name,
                         email: user.email,
-                        role: user.role
+                        role: user.role,
+                        phone: user.phone,
+                        isVerified: user.isVerified
                     },
                     token: generateToken(user._id)
                 }
@@ -80,7 +70,7 @@ const loginUser = async (req, res) => {
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ success: false, message: 'Server Error' });
+        res.status(500).json({ success: false, message: 'Server Error', error: error.message });
     }
 };
 
@@ -98,9 +88,9 @@ const getUserProfile = async (req, res) => {
                     _id: user._id,
                     name: user.name,
                     email: user.email,
-                    phone: user.phone,
                     role: user.role,
-                    addresses: user.addresses
+                    phone: user.phone,
+                    isVerified: user.isVerified
                 }
             });
         } else {
@@ -108,8 +98,15 @@ const getUserProfile = async (req, res) => {
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ success: false, message: 'Server Error' });
+        res.status(500).json({ success: false, message: 'Server Error', error: error.message });
     }
+};
+
+// Generate JWT
+const generateToken = (id) => {
+    return jwt.sign({ id }, process.env.JWT_SECRET, {
+        expiresIn: '30d',
+    });
 };
 
 module.exports = {

@@ -13,40 +13,10 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleAdminLogin = () => {
-    // Direct admin login without API call
-    const adminUser = {
-      id: 'admin123456',
-      name: 'Admin User',
-      email: 'admin@viragkala.com',
-      phone: '9999999999',
-      role: 'admin',
-      isVerified: true,
-      addresses: []
-    };
-    
-    // Store in localStorage
-    localStorage.setItem('token', 'admin-jwt-token-12345');
-    localStorage.setItem('user', JSON.stringify(adminUser));
-    
-    // Show success message
-    toast.success('🎉 Admin login successful! Redirecting to dashboard...');
-    
-    // Redirect to admin dashboard
-    setTimeout(() => {
-      window.location.href = '/admin';
-    }, 1000);
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Check for admin credentials
-    if (email === 'admin@viragkala.com' && password === 'admin123') {
-      setLoading(true);
-      handleAdminLogin();
-      return;
-    }
     
     setLoading(true);
     try {

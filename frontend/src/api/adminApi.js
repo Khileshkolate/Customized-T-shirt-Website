@@ -1,29 +1,13 @@
-import axios from 'axios';
-
-// Fallback to localhost if env isn't loaded correctly
-const API_URL = import.meta.env.VITE_API_URL || '/api';
-
-const api = axios.create({
-    baseURL: API_URL
-});
-
-// Setup interceptor to inject token
-api.interceptors.request.use(config => {
-    const token = localStorage.getItem('token');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-});
+import axios from '../utils/axiosInstance';
 
 export const getMockups = async () => {
-    const res = await api.get('/mockups');
+    const res = await axios.get('/mockups');
     return res.data;
 };
 
 // Data is expected to be FormData since it contains images
 export const uploadMockup = async (formData) => {
-    const res = await api.post('/mockups', formData, {
+    const res = await axios.post('/mockups', formData, {
         headers: {
             'Content-Type': 'multipart/form-data'
         }
@@ -31,7 +15,7 @@ export const uploadMockup = async (formData) => {
     return res.data;
 };
 
-export const deleteMockup = async (id) => {
-    const res = await api.delete(`/mockups/${id}`);
+export const deleteMockup = async (key) => {
+    const res = await axios.delete(`/mockups/${key}`);
     return res.data;
 };

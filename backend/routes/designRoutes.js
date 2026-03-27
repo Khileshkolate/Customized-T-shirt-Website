@@ -1,13 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const { createDesign, getMyDesigns, getDesignById } = require('../controllers/designController');
-const { protect } = require('../middleware/auth');
+const {
+    getDesigns,
+    getMyDesigns,
+    createDesign,
+    deleteDesign
+} = require('../controllers/designController');
+const { protect, admin } = require('../middleware/auth');
 
 router.route('/')
-    .post(protect, createDesign)
-    .get(protect, getMyDesigns);
+    .get(protect, admin, getDesigns)
+    .post(protect, createDesign);
 
-router.route('/:id')
-    .get(protect, getDesignById);
+router.get('/my', protect, getMyDesigns);
+router.delete('/:id', protect, deleteDesign);
 
 module.exports = router;

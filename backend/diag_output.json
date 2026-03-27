@@ -1,0 +1,61 @@
+{
+  "total": 7,
+  "uploaded": 7,
+  "samples": [
+    {
+      "_id": "69c433568b1ef5e5091f4bee",
+      "key": "Round Neck_White_front",
+      "imageUrl": "/uploads/mockups/1774465878693-WhatsApp Image 2026-03-23 at 11.33.58 AM.jpeg",
+      "type": "Round Neck",
+      "color": "White",
+      "view": "front",
+      "createdAt": "2026-03-25T19:11:18.725Z",
+      "updatedAt": "2026-03-25T19:11:18.725Z",
+      "__v": 0
+    },
+    {
+      "_id": "69c433618b1ef5e5091f4bf3",
+      "key": "Round Neck_Black_front",
+      "imageUrl": "/uploads/mockups/1774465888999-WhatsApp Image 2026-03-23 at 11.53.18 AM.jpeg",
+      "type": "Round Neck",
+      "color": "Black",
+      "view": "front",
+      "createdAt": "2026-03-25T19:11:29.015Z",
+      "updatedAt": "2026-03-25T19:11:29.015Z",
+      "__v": 0
+    },
+    {
+      "_id": "69c433688b1ef5e5091f4bf8",
+      "key": "Round Neck_Navy_front",
+      "imageUrl": "/uploads/mockups/1774465896890-WhatsApp Image 2026-03-23 at 11.36.55 AM.jpeg",
+      "type": "Round Neck",
+      "color": "Navy",
+      "view": "front",
+      "createdAt": "2026-03-25T19:11:36.898Z",
+      "updatedAt": "2026-03-25T19:11:36.898Z",
+      "__v": 0
+    },
+    {
+      "_id": "69c436878b1ef5e5091f4c1b",
+      "key": "Round Neck_White_back",
+      "imageUrl": "/uploads/mockups/1774466695683-white_back_round.png",
+      "type": "Round Neck",
+      "color": "White",
+      "view": "back",
+      "createdAt": "2026-03-25T19:24:55.710Z",
+      "updatedAt": "2026-03-25T19:24:55.710Z",
+      "__v": 0
+    },
+    {
+      "_id": "69c436a88b1ef5e5091f4c22",
+      "key": "Round Neck_Off White_front",
+      "imageUrl": "/uploads/mockups/1774466728745-offwhite_front_round.jpeg",
+      "type": "Round Neck",
+      "color": "Off White",
+      "view": "front",
+      "createdAt": "2026-03-25T19:25:28.761Z",
+      "updatedAt": "2026-03-25T19:25:28.761Z",
+      "__v": 0
+    }
+  ]
+}
