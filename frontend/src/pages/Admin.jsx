@@ -1,43 +1,41 @@
 import React, { useState, useRef, useEffect } from 'react';
 import useAdminStore from '../store/adminStore';
-import { Camera, RefreshCw, Trash2, ArrowRight, LayoutDashboard, Search, Upload } from 'lucide-react';
+import { 
+  Camera, RefreshCw, Trash2, ArrowRight, LayoutDashboard, 
+  Search, Upload, Plus, X, ChevronDown, ChevronUp, Palette, Tag
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
-
-const TYPES = [
-  { id: 'Round Neck', name: 'Round Neck', icon: '👕' },
-  { id: 'Polo', name: 'Polo', icon: '🎽' },
-  { id: 'Hoodie', name: 'Hoodie', icon: '🧥' },
-];
-
-const COLORS = [
-  { id: 'White', name: 'White', hex: '#ffffff' },
-  { id: 'Off White', name: 'Off White', hex: '#f8fafc' },
-  { id: 'Black', name: 'Black', hex: '#0f172a' },
-  { id: 'Navy', name: 'Navy', hex: '#1e3a8a' },
-  { id: 'Charcoal', name: 'Charcoal', hex: '#334155' },
-  { id: 'Red', name: 'Red', hex: '#dc2626' },
-  { id: 'Green', name: 'Green', hex: '#16a34a' },
-  { id: 'Yellow', name: 'Yellow', hex: '#eab308' },
-  { id: 'Blue', name: 'Blue', hex: '#2563eb' }
-];
 
 const VIEWS = ['front', 'back'];
 
 const Admin = () => {
-    const { mockups, uploadMockup, removeMockup, fetchMockups, loading } = useAdminStore();
+    const { 
+        mockups, uploadMockup, removeMockup, fetchMockups, 
+        shirtTypes, colors, fetchAttributes, addAttribute, deleteAttribute,
+        loading 
+    } = useAdminStore();
+    
     const fileInputRef = useRef(null);
     const [pendingKey, setPendingKey] = useState(null);
+    
+    // Tab/Collapse state
+    const [showAttrManager, setShowAttrManager] = useState(false);
+    
+    // Forms state
+    const [newType, setNewType] = useState({ name: '', icon: '👕' });
+    const [newColor, setNewColor] = useState({ name: '', hex: '#000000' });
 
     useEffect(() => {
+        fetchAttributes();
         fetchMockups();
-    }, [fetchMockups]);
+    }, [fetchAttributes, fetchMockups]);
     
     // Filters
     const [filterType, setFilterType] = useState('all');
     const [filterColor, setFilterColor] = useState('all');
 
     // Stats calculation
-    const totalSlots = TYPES.length * COLORS.length * VIEWS.length;
+    const totalSlots = shirtTypes.length * colors.length * VIEWS.length;
     const uploadedCount = Object.keys(mockups).length;
     const pendingCount = totalSlots - uploadedCount;
     const coverage = totalSlots === 0 ? 0 : Math.round((uploadedCount / totalSlots) * 100);
@@ -56,24 +54,141 @@ const Admin = () => {
         e.target.value = '';
     };
 
-    const displayTypes = filterType === 'all' ? TYPES : TYPES.filter(t => t.id === filterType);
-    const displayColors = filterColor === 'all' ? COLORS : COLORS.filter(c => c.id === filterColor);
+    const handleAddType = async (e) => {
+        e.preventDefault();
+        if (!newType.name) return;
+        await addAttribute({
+            name: newType.name,
+            value: newType.name, // Using name as value for simplicity
+            type: 'shirt-type',
+            meta: { icon: newType.icon }
+        });
+        setNewType({ name: '', icon: '👕' });
+    };
+
+    const handleAddColor = async (e) => {
+        e.preventDefault();
+        if (!newColor.name) return;
+        await addAttribute({
+            name: newColor.name,
+            value: newColor.name,
+            type: 'color',
+            meta: { hex: newColor.hex }
+        });
+        setNewColor({ name: '', hex: '#000000' });
+    };
+
+    const displayTypes = filterType === 'all' ? shirtTypes : shirtTypes.filter(t => t.value === filterType);
+    const displayColors = filterColor === 'all' ? colors : colors.filter(c => c.value === filterColor);
 
     return (
         <div className="min-h-screen bg-gray-50 text-gray-800 font-sans pb-20">
-            
-            {/* Navbar */}
-
-
             <main className="max-w-7xl mx-auto px-8 mt-10">
                 
                 {/* Header Info */}
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Mockup Image Manager</h1>
-                    <p className="text-gray-500 mt-2 text-sm max-w-2xl">
-                        Upload high-quality, transparent T-shirt base images for each category and color. These assets will automatically sync to the Designer canvas as backgrounds.
-                    </p>
+                <div className="flex justify-between items-start mb-8">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Mockup Image Manager</h1>
+                        <p className="text-gray-500 mt-2 text-sm max-w-2xl">
+                            Upload high-quality, transparent T-shirt base images. Add new colors or shirt types below to expand your collection.
+                        </p>
+                    </div>
+                    <button 
+                        onClick={() => setShowAttrManager(!showAttrManager)}
+                        className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm hover:bg-gray-50 transition-all font-semibold text-sm"
+                    >
+                        {showAttrManager ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                        Manage Types & Colors
+                    </button>
                 </div>
+
+                {/* Attribute Management Section */}
+                {showAttrManager && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10 animate-in fade-in slide-in-from-top-4 duration-300">
+                        {/* Shirt Types */}
+                        <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                            <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+                                <Tag className="text-indigo-600" size={20} />
+                                Shirt Types
+                            </h2>
+                            <form onSubmit={handleAddType} className="flex gap-2 mb-6">
+                                <input 
+                                    type="text" 
+                                    placeholder="Type Name (e.g. V-Neck)"
+                                    className="flex-1 bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                                    value={newType.name}
+                                    onChange={(e) => setNewType({...newType, name: e.target.value})}
+                                />
+                                <input 
+                                    type="text" 
+                                    placeholder="Icon"
+                                    className="w-12 bg-gray-50 border border-gray-200 rounded-lg p-2 text-center text-sm outline-none"
+                                    value={newType.icon}
+                                    onChange={(e) => setNewType({...newType, icon: e.target.value})}
+                                />
+                                <button type="submit" className="bg-indigo-600 text-white p-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                                    <Plus size={20} />
+                                </button>
+                            </form>
+                            <div className="flex flex-wrap gap-2">
+                                {shirtTypes.map(type => (
+                                    <div key={type._id} className="group flex items-center gap-2 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-full text-sm font-medium">
+                                        <span>{type.meta?.icon}</span>
+                                        <span>{type.name}</span>
+                                        <button 
+                                            onClick={() => deleteAttribute(type._id)}
+                                            className="text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                                        >
+                                            <X size={14} />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Colors */}
+                        <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                            <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+                                <Palette className="text-pink-600" size={20} />
+                                Shirt Colors
+                            </h2>
+                            <form onSubmit={handleAddColor} className="flex gap-2 mb-6">
+                                <input 
+                                    type="text" 
+                                    placeholder="Color Name (e.g. Pink)"
+                                    className="flex-1 bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                                    value={newColor.name}
+                                    onChange={(e) => setNewColor({...newColor, name: e.target.value})}
+                                />
+                                <div className="relative group">
+                                    <input 
+                                        type="color" 
+                                        className="w-10 h-10 p-0.5 bg-gray-50 border border-gray-200 rounded-lg cursor-pointer flex-shrink-0"
+                                        value={newColor.hex}
+                                        onChange={(e) => setNewColor({...newColor, hex: e.target.value})}
+                                    />
+                                </div>
+                                <button type="submit" className="bg-indigo-600 text-white p-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                                    <Plus size={20} />
+                                </button>
+                            </form>
+                            <div className="flex flex-wrap gap-2">
+                                {colors.map(color => (
+                                    <div key={color._id} className="group flex items-center gap-2 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-full text-sm font-medium">
+                                        <span className="w-3 h-3 rounded-full border border-gray-300" style={{ backgroundColor: color.meta?.hex }} />
+                                        <span>{color.name}</span>
+                                        <button 
+                                            onClick={() => deleteAttribute(color._id)}
+                                            className="text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                                        >
+                                            <X size={14} />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Stats */}
                 <div className="grid grid-cols-4 gap-4 mb-10">
@@ -99,7 +214,7 @@ const Admin = () => {
                             value={filterType} onChange={(e) => setFilterType(e.target.value)}
                         >
                             <option value="all">All Types</option>
-                            {TYPES.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                            {shirtTypes.map(t => <option key={t._id} value={t.value}>{t.name}</option>)}
                         </select>
                     </div>
 
@@ -110,7 +225,7 @@ const Admin = () => {
                             value={filterColor} onChange={(e) => setFilterColor(e.target.value)}
                         >
                             <option value="all">All Colors</option>
-                            {COLORS.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            {colors.map(c => <option key={c._id} value={c.value}>{c.name}</option>)}
                         </select>
                     </div>
                 </div>
@@ -123,7 +238,7 @@ const Admin = () => {
                     {displayTypes.map(type => 
                         displayColors.map(color => 
                             VIEWS.map(view => {
-                                const key = `${type.id}_${color.id}_${view}`;
+                                const key = `${type.value}_${color.value}_${view}`;
                                 const imgData = mockups[key];
                                 const hasImg = !!imgData;
 
@@ -134,10 +249,10 @@ const Admin = () => {
                                         <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
                                             <div>
                                                 <div className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
-                                                    {type.icon} {type.name}
+                                                    {type.meta?.icon} {type.name}
                                                 </div>
                                                 <div className="flex items-center gap-1.5 mt-1.5">
-                                                    <span className="w-3 h-3 rounded-full border border-gray-300" style={{ backgroundColor: color.hex }} />
+                                                    <span className="w-3 h-3 rounded-full border border-gray-300" style={{ backgroundColor: color.meta?.hex }} />
                                                     <span className="text-xs text-gray-500 font-medium">{color.name}</span>
                                                     <span className="text-xs text-gray-300 mx-1">•</span>
                                                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{view}</span>
@@ -152,7 +267,6 @@ const Admin = () => {
 
                                         {/* Preview Area */}
                                         <div className="h-48 bg-gray-100 relative items-center justify-center flex overflow-hidden border-b border-gray-100">
-                                            {/* Checkerboard subtle background */}
                                             <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000), repeating-linear-gradient(45deg, #000 25%, #fff 25%, #fff 75%, #000 75%, #000)', backgroundPosition: '0 0, 10px 10px', backgroundSize: '20px 20px' }} />
                                             
                                             {hasImg ? (
@@ -198,3 +312,4 @@ const Admin = () => {
 };
 
 export default Admin;
+

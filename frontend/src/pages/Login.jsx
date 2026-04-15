@@ -13,41 +13,8 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleAdminLogin = () => {
-    // Direct admin login without API call
-    const adminUser = {
-      id: 'admin123456',
-      name: 'Admin User',
-      email: 'admin@viragkala.com',
-      phone: '9999999999',
-      role: 'admin',
-      isVerified: true,
-      addresses: []
-    };
-    
-    // Store in localStorage
-    localStorage.setItem('token', 'admin-jwt-token-12345');
-    localStorage.setItem('user', JSON.stringify(adminUser));
-    
-    // Show success message
-    toast.success('🎉 Admin login successful! Redirecting to dashboard...');
-    
-    // Redirect to admin dashboard
-    setTimeout(() => {
-      window.location.href = '/admin';
-    }, 1000);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Check for admin credentials
-    if (email === 'admin@viragkala.com' && password === 'admin123') {
-      setLoading(true);
-      handleAdminLogin();
-      return;
-    }
-    
     setLoading(true);
     try {
       const result = await login(email, password);
@@ -64,6 +31,7 @@ const Login = () => {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-primary-50 flex items-center justify-center py-12 px-4">
@@ -146,8 +114,9 @@ const Login = () => {
                 </Link>
               </p>
               <p className="text-sm text-gray-500 mt-2">
-                For testing, use admin credentials above
+                For testing, use admin credentials: admin@viragkala.com / password123
               </p>
+
             </div>
           </div>
         </div>
