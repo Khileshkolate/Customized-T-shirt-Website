@@ -43,6 +43,8 @@ app.use('/api/designs', designRoutes);
 app.use('/api/mockups', mockupRoutes);
 app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/orders', require('./routes/orderRoutes'));
+app.use('/api/attributes', require('./routes/attributeRoutes'));
+
 
 
 app.get('/', (req, res) => {

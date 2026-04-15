@@ -35,3 +35,21 @@ export const deleteMockup = async (id) => {
     const res = await api.delete(`/mockups/${id}`);
     return res.data;
 };
+
+// Attribute Management
+export const getAttributes = async (type) => {
+    const params = type ? { type } : {};
+    const res = await api.get('/attributes', { params });
+    return res.data;
+};
+
+export const addAttribute = async (data) => {
+    const res = await api.post('/attributes', data);
+    return res.data;
+};
+
+export const deleteAttribute = async (id) => {
+    const res = await api.delete(`/attributes/${id}`);
+    return res.data;
+};
+
