@@ -3,22 +3,21 @@ import useDesignStore from '../../store/designStore';
 import { Type, Upload, Square, Circle, Triangle, Slash } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const colors = [
-    { name: 'White', hex: '#ffffff' },
-    { name: 'Off White', hex: '#f8fafc' },
-    { name: 'Black', hex: '#0f172a' },
-    { name: 'Navy', hex: '#1e3a8a' },
-    { name: 'Charcoal', hex: '#334155' },
-    { name: 'Red', hex: '#dc2626' },
-    { name: 'Green', hex: '#16a34a' },
-    { name: 'Yellow', hex: '#eab308' },
-    { name: 'Blue', hex: '#2563eb' }
-];
+import useAdminStore from '../../store/adminStore';
 
 const ToolPanel = () => {
   const { 
+      shirtTypes, colors, fetchAttributes,
+  } = useAdminStore();
+
+  React.useEffect(() => {
+    if (shirtTypes.length === 0) fetchAttributes();
+  }, [fetchAttributes, shirtTypes.length]);
+
+  const { 
       shirtType, setShirtType, 
       shirtColor, setShirtColor,
+
       printZone, setPrintZone,
       fabric, setFabric,
       size, setSize,
@@ -60,15 +59,15 @@ const ToolPanel = () => {
       {/* T SHIRT TYPE */}
       <div className="px-6 mb-8 mt-2">
         <h3 className="text-[10px] font-bold tracking-widest text-gray-400 mb-4 uppercase">T Shirt Type</h3>
-        <div className="flex gap-3">
-          {['Round Neck', 'Polo', 'Hoodie'].map(type => (
+        <div className="flex gap-3 overflow-x-auto pb-2">
+          {shirtTypes.map(type => (
               <button 
-                key={type}
-                onClick={() => setShirtType(type)}
-                className={`flex-1 aspect-square rounded-xl border flex flex-col items-center justify-center gap-1 transition-all shadow-sm ${shirtType === type ? 'border-indigo-500 text-indigo-700 bg-indigo-50 ring-1 ring-indigo-500' : 'border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50 bg-white'}`}
+                key={type._id}
+                onClick={() => setShirtType(type.value)}
+                className={`flex-1 min-w-[70px] aspect-square rounded-xl border flex flex-col items-center justify-center gap-1 transition-all shadow-sm ${shirtType === type.value ? 'border-indigo-500 text-indigo-700 bg-indigo-50 ring-1 ring-indigo-500' : 'border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50 bg-white'}`}
               >
-                  <div className="w-6 h-6 bg-current opacity-80 mask-shirt" style={{ maskImage: 'url(/icons/tshirt.svg)', WebkitMaskImage: 'url(/icons/tshirt.svg)' }} />
-                  <span className="text-[10px] font-bold">{type}</span>
+                  <span className="text-xl">{type.meta?.icon || '👕'}</span>
+                  <span className="text-[10px] font-bold">{type.name}</span>
               </button>
           ))}
         </div>
@@ -79,11 +78,11 @@ const ToolPanel = () => {
         <h3 className="text-[10px] font-bold tracking-widest text-gray-400 mb-4 uppercase">Color</h3>
         <div className="flex flex-wrap gap-2.5">
           {colors.map((c) => (
-             <div key={c.name} className="relative">
+             <div key={c._id} className="relative">
                 <button
-                  onClick={() => setShirtColor(c.name, c.hex)}
+                  onClick={() => setShirtColor(c.name, c.meta?.hex)}
                   className={`w-7 h-7 rounded-full shadow-sm transition-transform border border-gray-300 ${shirtColor === c.name ? 'ring-2 ring-indigo-500 ring-offset-2 scale-110' : 'hover:scale-110'}`}
-                  style={{ backgroundColor: c.hex }}
+                  style={{ backgroundColor: c.meta?.hex }}
                   title={c.name}
                 />
                 {shirtColor === c.name && (

@@ -13,11 +13,8 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    
     setLoading(true);
     try {
       const result = await login(email, password);
@@ -34,6 +31,7 @@ const Login = () => {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-primary-50 flex items-center justify-center py-12 px-4">
@@ -116,8 +114,9 @@ const Login = () => {
                 </Link>
               </p>
               <p className="text-sm text-gray-500 mt-2">
-                For testing, use admin credentials above
+                For testing, use admin credentials: admin@viragkala.com / password123
               </p>
+
             </div>
           </div>
         </div>

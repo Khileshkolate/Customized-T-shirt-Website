@@ -328,8 +328,10 @@ import {
   Gift,
   Clock
 } from 'lucide-react'
+import axios from '../utils/axiosInstance'
 import Loader from '../components/common/Loader'
 import { motion, AnimatePresence } from 'framer-motion'
+
 
 const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -422,11 +424,8 @@ const Products = () => {
     const fetchProducts = async () => {
       try {
         setLoading(true)
-        const response = await fetch('http://localhost:5000/api/products')
-        if (!response.ok) {
-           throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json()
+        const response = await axios.get('/products')
+        const data = response.data.data
         if (Array.isArray(data)) {
            setProducts(data)
         } else {

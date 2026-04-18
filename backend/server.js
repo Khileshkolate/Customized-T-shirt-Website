@@ -28,6 +28,7 @@ app.use('/api/orders', require('./routes/orderRoutes'));
 app.use('/api/users', require('./routes/adminRoutes'));
 app.use('/api/designs', require('./routes/designRoutes'));
 app.use('/api/mockups', require('./routes/mockupRoutes'));
+app.use('/api/attributes', require('./routes/attributeRoutes'));
 
 // Serve static files
 app.use('/uploads', express.static('uploads'));

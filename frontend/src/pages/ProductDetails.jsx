@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Shield, Truck, RotateCcw, Star, ChevronRight, ShoppingBag, Palette, ArrowLeft, Check } from 'lucide-react';
 import Loader from '../components/common/Loader';
 import { useCart } from '../contexts/CartContext';
+import axios from '../utils/axiosInstance';
 import toast from 'react-hot-toast';
 
 
@@ -26,10 +27,10 @@ const ProductDetails = () => {
     const fetchProduct = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:5000/api/products/${id}`);
-        const data = await response.json();
+        const response = await axios.get(`/products/${id}`);
+        const data = response.data.data;
         
-        if (response.ok) {
+        if (data) {
            setProduct(data);
            if (data.colors?.length > 0) setSelectedColor(data.colors[0]);
            if (data.sizes?.length > 0) setSelectedSize(data.sizes[0]);

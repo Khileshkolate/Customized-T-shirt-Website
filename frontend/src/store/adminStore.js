@@ -6,8 +6,50 @@ const BASE_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || '';
 
 const useAdminStore = create((set, get) => ({
   mockups: {},
+  shirtTypes: [],
+  colors: [],
   loading: false,
   error: null,
+
+  fetchAttributes: async () => {
+    try {
+      const { getAttributes } = await import('../api/adminApi');
+      const res = await getAttributes();
+      const attributes = res.data;
+      
+      set({ 
+        shirtTypes: attributes.filter(a => a.type === 'shirt-type'),
+        colors: attributes.filter(a => a.type === 'color')
+      });
+    } catch (error) {
+      console.error('Failed to fetch attributes:', error);
+    }
+  },
+
+  addAttribute: async (data) => {
+    try {
+      const { addAttribute } = await import('../api/adminApi');
+      await addAttribute(data);
+      await get().fetchAttributes();
+      toast.success('Attribute Added');
+    } catch (error) {
+      console.error('Failed to add attribute:', error);
+      toast.error('Failed to add attribute');
+    }
+  },
+
+  deleteAttribute: async (id) => {
+    try {
+      const { deleteAttribute } = await import('../api/adminApi');
+      await deleteAttribute(id);
+      await get().fetchAttributes();
+      toast.success('Attribute Removed');
+    } catch (error) {
+      console.error('Failed to remove attribute:', error);
+      toast.error('Failed to remove attribute');
+    }
+  },
+
 
   fetchMockups: async () => {
     set({ loading: true, error: null });
