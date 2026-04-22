@@ -11,6 +11,22 @@ const CanvasEditor = () => {
   
   const [zoomLevel, setZoomLevel] = useState(1);
 
+  // Auto scale canvas based on window width on mobile
+  useEffect(() => {
+    const updateZoom = () => {
+      if (window.innerWidth < 768) {
+        // Leave some padding (32px) and scale relative to original 480px width
+        const scale = (window.innerWidth - 32) / 480;
+        setZoomLevel(Math.min(scale, 1)); // Max 100%
+      } else {
+        setZoomLevel(1);
+      }
+    };
+    updateZoom();
+    window.addEventListener('resize', updateZoom);
+    return () => window.removeEventListener('resize', updateZoom);
+  }, []);
+
   useEffect(() => {
     fetchMockups();
   }, [fetchMockups]);
@@ -129,7 +145,7 @@ const CanvasEditor = () => {
     }, [storeCanvas, customImg]);
 
   return (
-    <div className="flex-1 w-full min-h-[500px] lg:h-full flex flex-col items-center justify-center relative bg-gray-100 overflow-hidden z-0 shadow-inner shrink-0">
+    <div className="flex-1 w-full min-h-[400px] lg:min-h-0 lg:h-full flex flex-col items-center justify-center relative bg-gray-100 overflow-hidden z-0 shadow-inner shrink-0 order-1 lg:order-2 px-2 lg:px-0 py-4 lg:py-0">
       
       {/* Workspace Zoom Controls */}
       <div className="absolute top-6 right-6 flex bg-white rounded-lg shadow-sm border border-gray-200 z-50 overflow-hidden">

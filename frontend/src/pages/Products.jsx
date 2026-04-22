@@ -339,6 +339,7 @@ const Products = () => {
   const [showFilters, setShowFilters] = useState(false)
   const [hoveredProduct, setHoveredProduct] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
+
   const [selectedSort, setSelectedSort] = useState('featured')
   const [priceRange, setPriceRange] = useState([0, 5000])
 

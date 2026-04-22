@@ -83,10 +83,10 @@ const Admin = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 text-gray-800 font-sans pb-20">
-            <main className="max-w-7xl mx-auto px-8 mt-10">
+            <main className="max-w-7xl mx-auto px-4 sm:px-8 mt-6 sm:mt-10">
                 
                 {/* Header Info */}
-                <div className="flex justify-between items-start mb-8">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-6 sm:mb-8">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Mockup Image Manager</h1>
                         <p className="text-gray-500 mt-2 text-sm max-w-2xl">
@@ -95,7 +95,7 @@ const Admin = () => {
                     </div>
                     <button 
                         onClick={() => setShowAttrManager(!showAttrManager)}
-                        className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm hover:bg-gray-50 transition-all font-semibold text-sm"
+                        className="flex items-center justify-center w-full sm:w-auto gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm hover:bg-gray-50 transition-all font-semibold text-sm"
                     >
                         {showAttrManager ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                         Manage Types & Colors
@@ -191,7 +191,7 @@ const Admin = () => {
                 )}
 
                 {/* Stats */}
-                <div className="grid grid-cols-4 gap-4 mb-10">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-8 sm:mb-10">
                     {[
                         { label: 'Total Slots', val: totalSlots, color: 'text-indigo-600' },
                         { label: 'Uploaded', val: uploadedCount, color: 'text-green-600', bg: 'bg-green-50' },
@@ -206,11 +206,11 @@ const Admin = () => {
                 </div>
 
                 {/* Filters */}
-                <div className="flex flex-wrap items-center gap-4 mb-8 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                    <div className="flex items-center gap-3 border-r border-gray-200 pr-4">
+                <div className="flex flex-col sm:flex-row flex-wrap sm:items-center gap-4 sm:gap-6 mb-8 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 sm:border-r border-gray-200 sm:pr-6">
                         <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Type</span>
                         <select 
-                            className="bg-gray-50 border border-gray-200 text-sm font-semibold text-gray-700 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2 outline-none"
+                            className="bg-gray-50 border border-gray-200 text-sm font-semibold text-gray-700 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2 outline-none w-full sm:w-auto"
                             value={filterType} onChange={(e) => setFilterType(e.target.value)}
                         >
                             <option value="all">All Types</option>
@@ -218,10 +218,10 @@ const Admin = () => {
                         </select>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                         <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Color</span>
                         <select 
-                            className="bg-gray-50 border border-gray-200 text-sm font-semibold text-gray-700 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2 outline-none cursor-pointer"
+                            className="bg-gray-50 border border-gray-200 text-sm font-semibold text-gray-700 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2 outline-none cursor-pointer w-full sm:w-auto"
                             value={filterColor} onChange={(e) => setFilterColor(e.target.value)}
                         >
                             <option value="all">All Colors</option>
