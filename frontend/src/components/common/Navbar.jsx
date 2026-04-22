@@ -729,21 +729,29 @@ import {
   Package,
   Tag,
   Printer,
-  Layers
+  Layers,
+  Sparkles
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
+import { useCart } from '../../contexts/CartContext'
 import { motion, AnimatePresence } from 'framer-motion'
+import axiosInstance from '../../utils/axiosInstance'
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchSuggestions, setSearchSuggestions] = useState([])
   const [isSearchFocused, setIsSearchFocused] = useState(false)
   const [isSearching, setIsSearching] = useState(false)
+  const [products, setProducts] = useState([])
   const { user, logout, isAuthenticated } = useAuth()
+  const { cartItems } = useCart()
   const navigate = useNavigate()
+  
+  const cartCount = cartItems?.reduce((acc, item) => acc + (item.quantity || 1), 0) || 0;
   const searchRef = useRef(null)
   const searchInputRef = useRef(null)
   const searchTimeoutRef = useRef(null)
@@ -755,17 +763,18 @@ const Navbar = () => {
     { name: 'Design Studio', path: '/designer', icon: <Palette className="h-4 w-4" /> },
   ]
 
-  // Search suggestions data
-  const searchCategories = [
-    { icon: <Tag className="h-4 w-4" />, name: 'Business Cards', category: 'Printing' },
-    { icon: <Printer className="h-4 w-4" />, name: 'Banners', category: 'Large Format' },
-    { icon: <Layers className="h-4 w-4" />, name: 'Brochures', category: 'Marketing' },
-    { icon: <Package className="h-4 w-4" />, name: 'Packaging', category: 'Custom' },
-    { icon: <Tag className="h-4 w-4" />, name: 'Letterheads', category: 'Stationery' },
-    { icon: <Printer className="h-4 w-4" />, name: 'Flyers', category: 'Marketing' },
-    { icon: <Layers className="h-4 w-4" />, name: 'Posters', category: 'Large Format' },
-    { icon: <Package className="h-4 w-4" />, name: 'Stickers', category: 'Labels' },
-  ]
+  // Fetch real products
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axiosInstance.get('/products');
+        setProducts(response.data || []);
+      } catch (error) {
+        console.error('Failed to fetch products for search', error);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   // Custom debounce function
   const debounce = (func, delay) => {
@@ -779,24 +788,40 @@ const Navbar = () => {
   // Debounced search function
   const handleSearchDebounced = useCallback(
     debounce((query) => {
+      const mapProductToSuggestion = (item) => ({
+         ...item,
+         icon: item.type === 't-shirt' ? <Sparkles className="h-4 w-4"/> : <Package className="h-4 w-4" />,
+         category: item.type || 'Custom'
+      });
+
       if (query.trim() === '') {
-        setSearchSuggestions(searchCategories.slice(0, 4))
+        setSearchSuggestions(products.slice(0, 4).map(mapProductToSuggestion))
         setIsSearching(false)
       } else {
         setIsSearching(true)
-        // Simulate API delay
         setTimeout(() => {
-          const filtered = searchCategories.filter(item =>
+          const filtered = products.filter(item =>
             item.name.toLowerCase().includes(query.toLowerCase()) ||
-            item.category.toLowerCase().includes(query.toLowerCase())
-          ).slice(0, 6)
+            (item.type && item.type.toLowerCase().includes(query.toLowerCase()))
+          ).slice(0, 6).map(mapProductToSuggestion)
           setSearchSuggestions(filtered)
           setIsSearching(false)
-        }, 200)
+        }, 150)
       }
     }, 300),
-    []
+    [products]
   )
+
+  // Initialize with top suggestions when products load
+  useEffect(() => {
+    if (searchQuery.trim() === '' && products.length > 0) {
+      setSearchSuggestions(products.slice(0, 4).map(item => ({
+        ...item,
+        icon: item.type === 't-shirt' ? <Sparkles className="h-4 w-4"/> : <Package className="h-4 w-4" />,
+        category: item.type || 'Custom'
+      })));
+    }
+  }, [products]);
 
   // Handle search query changes
   useEffect(() => {
@@ -809,11 +834,6 @@ const Navbar = () => {
       }
     }
   }, [searchQuery, handleSearchDebounced])
-
-  // Initialize with top 4 suggestions
-  useEffect(() => {
-    setSearchSuggestions(searchCategories.slice(0, 4))
-  }, [])
 
   // Close search when clicking outside
   useEffect(() => {
@@ -851,22 +871,28 @@ const Navbar = () => {
   const handleSearchSubmit = (e) => {
     e.preventDefault()
     if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery)}`)
+      navigate(`/products?search=${encodeURIComponent(searchQuery)}`)
       setIsSearchOpen(false)
+      setIsMobileSearchOpen(false)
       setSearchQuery('')
       setIsSearchFocused(false)
     }
   }
 
   const handleSuggestionClick = (suggestion) => {
-    navigate(`/search?q=${encodeURIComponent(suggestion.name)}`)
+    if (suggestion._id) {
+       navigate(`/products/${suggestion._id}`)
+    } else {
+       navigate(`/products?search=${encodeURIComponent(suggestion.name)}`)
+    }
     setIsSearchOpen(false)
+    setIsMobileSearchOpen(false)
     setSearchQuery('')
     setIsSearchFocused(false)
   }
 
   const handleSearchClick = () => {
-    setIsSearchOpen(true)
+    setIsMobileSearchOpen(true)
     setTimeout(() => {
       searchInputRef.current?.focus()
     }, 100)
@@ -1051,9 +1077,11 @@ const Navbar = () => {
                 >
                   <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6 text-gray-700 group-hover:text-primary-600 transition-colors" />
                 </motion.div>
-                <span className="absolute -top-1 -right-1 h-5 w-5 bg-primary-600 text-white text-xs rounded-full flex items-center justify-center font-bold shadow-sm">
-                  3
-                </span>
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-5 w-5 bg-primary-600 text-white text-xs rounded-full flex items-center justify-center font-bold shadow-sm">
+                    {cartCount}
+                  </span>
+                )}
               </Link>
             )}
 
@@ -1170,7 +1198,7 @@ const Navbar = () => {
 
         {/* Mobile Search (Full Width) */}
         <AnimatePresence>
-          {isSearchOpen && (
+          {isMobileSearchOpen && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
@@ -1251,7 +1279,7 @@ const Navbar = () => {
 
         {/* Mobile Menu */}
         <AnimatePresence>
-          {isMenuOpen && !isSearchOpen && (
+          {isMenuOpen && !isMobileSearchOpen && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}

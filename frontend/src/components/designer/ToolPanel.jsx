@@ -45,7 +45,7 @@ const ToolPanel = () => {
   };
 
   return (
-    <div className="w-full lg:w-[300px] h-auto lg:h-full lg:overflow-y-auto bg-white border-b lg:border-b-0 lg:border-r border-gray-200 text-gray-700 custom-scrollbar flex flex-col pt-4 shadow-xl z-20 shrink-0">
+    <div className="w-full lg:w-[300px] h-auto lg:h-full lg:overflow-y-auto bg-white border-b lg:border-b-0 lg:border-r border-gray-200 text-gray-700 custom-scrollbar flex flex-col pt-4 shadow-xl z-20 shrink-0 order-2 lg:order-1">
       
       {/* Hidden File Input for Image Upload */}
       <input 

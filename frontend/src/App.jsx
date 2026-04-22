@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
 // Providers
@@ -35,13 +35,65 @@ import AdminProducts from './pages/admin/Products';
 import AdminOrders from './pages/admin/Orders';
 import AdminUsers from './pages/admin/Users';
 import AdminDesigns from './pages/admin/Designs';
+import AdminSettings from './pages/admin/Settings'; // NEW ROUTE
 
 // Styles
 import './styles/globals.css';
 
-function App() {
-  const isAdminPath = window.location.pathname.startsWith('/admin');
+const AppContent = () => {
+  const location = useLocation();
+  const isAdminPath = location.pathname.startsWith('/admin');
 
+  return (
+    <div className={`min-h-screen flex flex-col ${isAdminPath ? 'bg-gray-100' : ''}`}>
+      {!isAdminPath && <Navbar />}
+      <main className="flex-grow flex flex-col">
+        <Routes>
+          {/* Public Routes - Restricted for Admins */}
+          <Route element={<UserRoute />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/otp-verification" element={<OtpVerification />} />
+            <Route path="/products" element={<Products />} />
+            <Route path="/products/:id" element={<ProductDetails />} />
+            <Route path="/designer" element={<Designer />} />
+          </Route>
+          
+          {/* Protected Routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/design" element={<Navigate to="/designer" replace />} />
+            <Route path="/design/:productId" element={<Navigate to="/designer" replace />} />
+            <Route path="/designs" element={<MyDesigns />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/orders" element={<Orders />} />
+            <Route path="/orders/:id" element={<Orders />} />
+          </Route>
+
+          {/* Admin Routes */}
+          <Route element={<AdminRoute />}>
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/settings" element={<AdminSettings />} />
+            <Route path="/admin/mockups" element={<Admin />} />
+            <Route path="/admin/dashboard" element={<Navigate to="/admin" replace />} />
+            <Route path="/admin/products" element={<AdminProducts />} />
+            <Route path="/admin/orders" element={<AdminOrders />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/admin/designs" element={<AdminDesigns />} />
+          </Route>
+
+          {/* 404 */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
+      {!isAdminPath && <Footer />}
+    </div>
+  );
+};
+
+function App() {
   return (
     <Router>
       <AuthProvider>
@@ -56,50 +108,7 @@ function App() {
               },
             }}
           />
-          <div className="min-h-screen flex flex-col">
-            <Navbar />
-            <main className="flex-grow">
-              <Routes>
-                {/* Public Routes - Restricted for Admins */}
-                <Route element={<UserRoute />}>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/otp-verification" element={<OtpVerification />} />
-                  <Route path="/products" element={<Products />} />
-                  <Route path="/products/:id" element={<ProductDetails />} />
-                  <Route path="/designer" element={<Designer />} />
-                </Route>
-                
-                {/* Protected Routes */}
-                <Route element={<ProtectedRoute />}>
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/design" element={<Navigate to="/designer" replace />} />
-                  <Route path="/design/:productId" element={<Navigate to="/designer" replace />} />
-                  <Route path="/designs" element={<MyDesigns />} />
-                  <Route path="/cart" element={<Cart />} />
-                  <Route path="/checkout" element={<Checkout />} />
-                  <Route path="/orders" element={<Orders />} />
-                  <Route path="/orders/:id" element={<Orders />} />
-                </Route>
-
-                {/* Admin Routes */}
-                <Route element={<AdminRoute />}>
-                  <Route path="/admin" element={<AdminDashboard />} />
-                  <Route path="/admin/mockups" element={<Admin />} />
-                  <Route path="/admin/dashboard" element={<Navigate to="/admin" replace />} />
-                  <Route path="/admin/products" element={<AdminProducts />} />
-                  <Route path="/admin/orders" element={<AdminOrders />} />
-                  <Route path="/admin/users" element={<AdminUsers />} />
-                  <Route path="/admin/designs" element={<AdminDesigns />} />
-                </Route>
-
-                {/* 404 */}
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </main>
-            {!isAdminPath && <Footer />}
-          </div>
+          <AppContent />
         </CartProvider>
       </AuthProvider>
     </Router>
