@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }) => {
       
       // If login requires OTP (secure 2FA flow)
       if (response.data.requireOtp) {
-          return { success: true, requireOtp: true, phone: response.data.phone, message: response.data.message };
+          return { success: true, requireOtp: true, contact: response.data.contact, message: response.data.message };
       }
 
       const { token, user: userData } = response.data.data;
@@ -125,9 +125,10 @@ export const AuthProvider = ({ children }) => {
         return { success: false, error: errorMessage };
       }
     },
-    verifyOtp: async (otp, phone) => {
+    verifyOtp: async (otp, contact) => {
       try {
-        const response = await axios.post('/auth/verify-otp', { phone, otp });
+        const payload = contact.includes('@') ? { email: contact, otp } : { phone: contact, otp };
+        const response = await axios.post('/auth/verify-otp', payload);
         const { token, user: userData } = response.data.data;
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(userData));
