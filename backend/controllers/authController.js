@@ -40,7 +40,7 @@ const registerUser = async (req, res) => {
         }
 
         // Logic to send OTP
-        const contact = phone; // Relying primarily on phone for OTP as per frontend request format
+        const contact = email; // Relying primarily on email for OTP
         const lastOtp = await Otp.findOne({ contact });
 
         if (lastOtp && (Date.now() - new Date(lastOtp.lastSentAt).getTime() < 60000)) {
@@ -204,7 +204,7 @@ const loginUser = async (req, res) => {
 
         if (user && (await user.matchPassword(password))) {
             // Enforce OTP on Login as well
-            const contact = user.phone || user.email; // Use phone to match verification component, or email
+            const contact = user.email; // Use email as primary contact for OTP
             const lastOtp = await Otp.findOne({ contact });
 
             if (lastOtp && (Date.now() - new Date(lastOtp.lastSentAt).getTime() < 60000)) {
@@ -236,7 +236,7 @@ const loginUser = async (req, res) => {
                 success: true,
                 message: 'OTP sent for login',
                 requireOtp: true,
-                phone: user.phone
+                contact: contact // Pass the contact so frontend knows where it was sent
             });
         } else {
             res.status(401).json({ success: false, message: 'Invalid email or password' });

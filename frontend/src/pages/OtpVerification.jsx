@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Smartphone, RefreshCw } from 'lucide-react'
+import { Mail, RefreshCw } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import toast from 'react-hot-toast'
 
@@ -15,17 +15,17 @@ const OtpVerification = () => {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const phone = location.state?.phone
+  const contact = location.state?.contact || location.state?.phone
 
   useEffect(() => {
-    if (!phone) {
+    if (!contact) {
       toast.error('Please request an OTP first')
       navigate('/login', { replace: true })
     }
-  }, [phone, navigate])
+  }, [contact, navigate])
 
   useEffect(() => {
-    if (!phone) return undefined
+    if (!contact) return undefined
 
     const timer = setInterval(() => {
       setResendTime(prev => {
@@ -38,7 +38,7 @@ const OtpVerification = () => {
     }, 1000)
 
     return () => clearInterval(timer)
-  }, [phone])
+  }, [contact])
 
   const handleOtpChange = (index, value) => {
     if (value.length > 1) {
@@ -64,9 +64,9 @@ const OtpVerification = () => {
 
   const handleResendOtp = async () => {
     if (!canResend) return
-    if (!phone) return
+    if (!contact) return
 
-    const result = await sendOtp({ phone, type: 'phone' })
+    const result = await sendOtp({ contact, type: 'email' })
     if (result.success) {
       setResendTime(60)
       setCanResend(false)
@@ -78,7 +78,7 @@ const OtpVerification = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!phone) return
+    if (!contact) return
 
     const otpString = otp.join('')
     
@@ -88,7 +88,7 @@ const OtpVerification = () => {
     }
     
     setLoading(true)
-    const result = await verifyOtp(otpString, phone)
+    const result = await verifyOtp(otpString, contact)
     if (!result.success) {
       toast.error('Invalid OTP. Please try again.')
     } else {
@@ -102,7 +102,7 @@ const OtpVerification = () => {
     setLoading(false)
   }
 
-  if (!phone) return null
+  if (!contact) return null
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
@@ -113,14 +113,14 @@ const OtpVerification = () => {
       >
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-100 text-primary-600 rounded-full mb-4">
-            <Smartphone className="h-8 w-8" />
+            <Mail className="h-8 w-8" />
           </div>
           <h2 className="text-3xl font-bold text-gray-900">Verify OTP</h2>
           <p className="text-gray-600 mt-2">
-            Enter the 6-digit code sent to your phone
+            Enter the 6-digit code sent to your email
           </p>
           <p className="text-lg font-medium text-gray-900 mt-1">
-            +91 {phone}
+            {contact}
           </p>
         </div>
 

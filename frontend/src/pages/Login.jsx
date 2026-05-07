@@ -21,7 +21,7 @@ const Login = () => {
       if (result.success) {
         if (result.requireOtp) {
             toast.success('OTP sent! Please verify.');
-            navigate('/otp-verification', { state: { phone: result.phone } });
+            navigate('/otp-verification', { state: { contact: result.contact } });
             return;
         }
 
