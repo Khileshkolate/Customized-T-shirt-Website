@@ -87,7 +87,7 @@ const ProductCard = ({ product }) => {
           </div>
           
           <Link
-            to={`/design/${product._id || '1'}`}
+            to={`/designer?product=${product._id || ''}`}
             className="text-primary-600 hover:text-primary-700 font-semibold text-sm"
           >
             Customize →

@@ -104,7 +104,7 @@ const AdminDesigns = () => {
       </div>
     ),
     type: (
-      <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+      <span className="px-3 py-1 bg-secondary-100 text-secondary-800 rounded-full text-xs font-medium">
         {design.type || 't-shirt'}
       </span>
     ),
@@ -126,7 +126,7 @@ const AdminDesigns = () => {
     actions: (
       <div className="flex items-center gap-2">
         <button
-          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+          className="p-2 text-secondary-600 hover:bg-secondary-50 rounded-lg"
           title="View Design"
         >
           <Eye className="h-4 w-4" />
@@ -138,7 +138,7 @@ const AdminDesigns = () => {
           <Download className="h-4 w-4" />
         </button>
         <button
-          className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg"
+          className="p-2 text-secondary-600 hover:bg-secondary-50 rounded-lg"
           title="Share"
         >
           <Share2 className="h-4 w-4" />
@@ -237,8 +237,8 @@ const AdminDesigns = () => {
               </div>
               <div className="text-sm text-gray-600">T-Shirt Designs</div>
             </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Palette className="h-6 w-6 text-blue-600" />
+            <div className="w-12 h-12 bg-secondary-100 rounded-lg flex items-center justify-center">
+              <Palette className="h-6 w-6 text-secondary-600" />
             </div>
           </div>
         </div>

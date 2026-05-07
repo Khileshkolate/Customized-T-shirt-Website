@@ -1,4 +1,7 @@
 const Design = require('../models/Design');
+const mongoose = require('mongoose');
+
+const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 // @desc    Get all designs
 // @route   GET /api/designs
@@ -57,11 +60,81 @@ const createDesign = async (req, res) => {
     }
 };
 
+// @desc    Get a design by ID
+// @route   GET /api/designs/:id
+// @access  Private
+const getDesignById = async (req, res) => {
+    try {
+        if (!isValidId(req.params.id)) {
+            return res.status(404).json({ success: false, message: 'Design not found' });
+        }
+
+        const design = await Design.findById(req.params.id);
+
+        if (!design) {
+            return res.status(404).json({ success: false, message: 'Design not found' });
+        }
+
+        if (!design.isPublic && design.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+            return res.status(403).json({ success: false, message: 'Not authorized' });
+        }
+
+        res.json({
+            success: true,
+            data: design
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+};
+
+// @desc    Update a design
+// @route   PUT /api/designs/:id
+// @access  Private
+const updateDesign = async (req, res) => {
+    try {
+        if (!isValidId(req.params.id)) {
+            return res.status(404).json({ success: false, message: 'Design not found' });
+        }
+
+        const design = await Design.findById(req.params.id);
+
+        if (!design) {
+            return res.status(404).json({ success: false, message: 'Design not found' });
+        }
+
+        if (design.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+            return res.status(403).json({ success: false, message: 'Not authorized' });
+        }
+
+        const allowedFields = ['name', 'type', 'canvasData', 'elements', 'isPublic', 'previewImage'];
+        allowedFields.forEach((field) => {
+            if (req.body[field] !== undefined) {
+                design[field] = req.body[field];
+            }
+        });
+
+        const updatedDesign = await design.save();
+        res.json({
+            success: true,
+            data: updatedDesign
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+};
+
 // @desc    Delete a design
 // @route   DELETE /api/designs/:id
 // @access  Private
 const deleteDesign = async (req, res) => {
     try {
+        if (!isValidId(req.params.id)) {
+            return res.status(404).json({ success: false, message: 'Design not found' });
+        }
+
         const design = await Design.findById(req.params.id);
         if (design) {
             // Check ownership unless admin
@@ -83,5 +156,7 @@ module.exports = {
     getDesigns,
     getMyDesigns,
     createDesign,
+    getDesignById,
+    updateDesign,
     deleteDesign
 };

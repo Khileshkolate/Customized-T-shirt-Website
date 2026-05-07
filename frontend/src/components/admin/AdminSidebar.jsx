@@ -44,8 +44,8 @@ const AdminSidebar = () => {
           <div className="flex items-center justify-between">
             {!collapsed && (
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="font-bold text-xl text-white">VK</span>
+                <div className="w-10 h-10 bg-gradient-to-br from-secondary-400 to-secondary-500 hover:from-primary-500 hover:to-primary-600 transition-all duration-300 rounded-xl flex items-center justify-center shadow-lg cursor-pointer group">
+                <span className="font-bold text-xl text-gray-900 group-hover:text-white transition-colors duration-300">VK</span>
               </div>
               <div>
                 <span className="text-xl font-bold">ViragKala</span>
@@ -72,10 +72,10 @@ const AdminSidebar = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
                   isActive
-                    ? 'bg-primary-600 text-white'
-                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                    ? 'bg-secondary-500 text-gray-900 shadow-md shadow-secondary-500/20 font-medium'
+                    : 'text-gray-300 hover:bg-primary-600 hover:text-white hover:shadow-md hover:shadow-primary-600/20'
                 }`}
               >
                 {item.icon}
@@ -90,8 +90,8 @@ const AdminSidebar = () => {
           {!collapsed && (
             <div className="mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg mx-auto">
-              <span className="font-bold text-lg text-white">VK</span>
+                <div className="w-10 h-10 bg-gradient-to-br from-secondary-400 to-secondary-500 hover:from-primary-500 hover:to-primary-600 transition-all duration-300 rounded-xl flex items-center justify-center shadow-lg mx-auto cursor-pointer group">
+              <span className="font-bold text-lg text-gray-900 group-hover:text-white transition-colors duration-300">VK</span>
             </div>
                 <div>
                   <div className="font-medium">Admin User</div>

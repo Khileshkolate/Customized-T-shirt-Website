@@ -108,14 +108,14 @@ const Admin = () => {
                         {/* Shirt Types */}
                         <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
                             <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-                                <Tag className="text-indigo-600" size={20} />
+                                <Tag className="text-primary-600" size={20} />
                                 Shirt Types
                             </h2>
                             <form onSubmit={handleAddType} className="flex gap-2 mb-6">
                                 <input 
                                     type="text" 
                                     placeholder="Type Name (e.g. V-Neck)"
-                                    className="flex-1 bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="flex-1 bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-primary-500"
                                     value={newType.name}
                                     onChange={(e) => setNewType({...newType, name: e.target.value})}
                                 />
@@ -126,7 +126,7 @@ const Admin = () => {
                                     value={newType.icon}
                                     onChange={(e) => setNewType({...newType, icon: e.target.value})}
                                 />
-                                <button type="submit" className="bg-indigo-600 text-white p-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                                <button type="submit" className="bg-primary-600 text-white p-2 rounded-lg hover:bg-primary-700 transition-colors">
                                     <Plus size={20} />
                                 </button>
                             </form>
@@ -149,14 +149,14 @@ const Admin = () => {
                         {/* Colors */}
                         <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
                             <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-                                <Palette className="text-pink-600" size={20} />
+                                <Palette className="text-secondary-600" size={20} />
                                 Shirt Colors
                             </h2>
                             <form onSubmit={handleAddColor} className="flex gap-2 mb-6">
                                 <input 
                                     type="text" 
                                     placeholder="Color Name (e.g. Pink)"
-                                    className="flex-1 bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="flex-1 bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-primary-500"
                                     value={newColor.name}
                                     onChange={(e) => setNewColor({...newColor, name: e.target.value})}
                                 />
@@ -168,7 +168,7 @@ const Admin = () => {
                                         onChange={(e) => setNewColor({...newColor, hex: e.target.value})}
                                     />
                                 </div>
-                                <button type="submit" className="bg-indigo-600 text-white p-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                                <button type="submit" className="bg-primary-600 text-white p-2 rounded-lg hover:bg-primary-700 transition-colors">
                                     <Plus size={20} />
                                 </button>
                             </form>
@@ -193,7 +193,7 @@ const Admin = () => {
                 {/* Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-8 sm:mb-10">
                     {[
-                        { label: 'Total Slots', val: totalSlots, color: 'text-indigo-600' },
+                        { label: 'Total Slots', val: totalSlots, color: 'text-primary-600' },
                         { label: 'Uploaded', val: uploadedCount, color: 'text-green-600', bg: 'bg-green-50' },
                         { label: 'Pending', val: pendingCount, color: 'text-amber-600', bg: 'bg-amber-50' },
                         { label: 'Coverage', val: `${coverage}%`, color: 'text-gray-900' }
@@ -210,7 +210,7 @@ const Admin = () => {
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 sm:border-r border-gray-200 sm:pr-6">
                         <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Type</span>
                         <select 
-                            className="bg-gray-50 border border-gray-200 text-sm font-semibold text-gray-700 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2 outline-none w-full sm:w-auto"
+                            className="bg-gray-50 border border-gray-200 text-sm font-semibold text-gray-700 rounded-lg focus:ring-primary-500 focus:border-primary-500 block p-2 outline-none w-full sm:w-auto"
                             value={filterType} onChange={(e) => setFilterType(e.target.value)}
                         >
                             <option value="all">All Types</option>
@@ -221,7 +221,7 @@ const Admin = () => {
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                         <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Color</span>
                         <select 
-                            className="bg-gray-50 border border-gray-200 text-sm font-semibold text-gray-700 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2 outline-none cursor-pointer w-full sm:w-auto"
+                            className="bg-gray-50 border border-gray-200 text-sm font-semibold text-gray-700 rounded-lg focus:ring-primary-500 focus:border-primary-500 block p-2 outline-none cursor-pointer w-full sm:w-auto"
                             value={filterColor} onChange={(e) => setFilterColor(e.target.value)}
                         >
                             <option value="all">All Colors</option>
@@ -283,7 +283,7 @@ const Admin = () => {
                                         <div className="p-4 flex gap-2 mt-auto">
                                             <button 
                                                 onClick={() => handleUploadClick(key)}
-                                                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all border ${hasImg ? 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300' : 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 hover:border-indigo-300 shadow-sm'}`}
+                                                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all border ${hasImg ? 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300' : 'bg-primary-50 border-primary-200 text-primary-700 hover:bg-primary-100 hover:border-primary-300 shadow-sm'}`}
                                             >
                                                 {hasImg ? <RefreshCw size={14} /> : <Upload size={14} />}
                                                 {hasImg ? 'Replace' : 'Upload PNG'}

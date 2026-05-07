@@ -12,7 +12,7 @@ const Designer = () => {
   const { user } = useAuth();
 
   return (
-    <div className="h-screen w-screen bg-gray-50 flex flex-col font-sans overflow-hidden text-gray-800 selection:bg-indigo-500 selection:text-white fixed inset-0 z-[100]">
+    <div className="h-screen w-screen bg-gray-50 flex flex-col font-sans overflow-hidden text-gray-800 selection:bg-primary-500 selection:text-white fixed inset-0 z-[100]">
       
       {/* Top Navbar */}
       <header className="bg-white border-b border-gray-200 h-auto md:h-16 flex flex-col md:flex-row items-center justify-between px-4 md:px-6 py-3 md:py-0 shadow-sm z-30 shrink-0 gap-3 md:gap-0">

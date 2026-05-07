@@ -64,7 +64,7 @@ const ToolPanel = () => {
               <button 
                 key={type._id}
                 onClick={() => setShirtType(type.value)}
-                className={`flex-1 min-w-[70px] aspect-square rounded-xl border flex flex-col items-center justify-center gap-1 transition-all shadow-sm ${shirtType === type.value ? 'border-indigo-500 text-indigo-700 bg-indigo-50 ring-1 ring-indigo-500' : 'border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50 bg-white'}`}
+                className={`flex-1 min-w-[70px] aspect-square rounded-xl border flex flex-col items-center justify-center gap-1 transition-all shadow-sm ${shirtType === type.value ? 'border-primary-500 text-primary-700 bg-primary-50 ring-1 ring-primary-500' : 'border-gray-200 text-gray-500 hover:border-primary-500 hover:bg-primary-50 hover:text-primary-700 bg-white'}`}
               >
                   <span className="text-xl">{type.meta?.icon || '👕'}</span>
                   <span className="text-[10px] font-bold">{type.name}</span>
@@ -81,12 +81,12 @@ const ToolPanel = () => {
              <div key={c._id} className="relative">
                 <button
                   onClick={() => setShirtColor(c.name, c.meta?.hex)}
-                  className={`w-7 h-7 rounded-full shadow-sm transition-transform border border-gray-300 ${shirtColor === c.name ? 'ring-2 ring-indigo-500 ring-offset-2 scale-110' : 'hover:scale-110'}`}
+                  className={`w-7 h-7 rounded-full shadow-sm transition-transform border border-gray-300 ${shirtColor === c.name ? 'ring-2 ring-primary-500 ring-offset-2 scale-110' : 'hover:scale-110'}`}
                   style={{ backgroundColor: c.meta?.hex }}
                   title={c.name}
                 />
                 {shirtColor === c.name && (
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-indigo-500 rounded-full border-2 border-white" />
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary-500 rounded-full border-2 border-white" />
                 )}
              </div>
           ))}
@@ -101,7 +101,7 @@ const ToolPanel = () => {
               <button 
                 key={zone}
                 onClick={() => setPrintZone(zone)}
-                className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${printZone === zone ? 'bg-white border border-gray-200 text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700 border border-transparent'}`}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${printZone === zone ? 'bg-primary-600 border border-primary-600 text-white shadow-sm' : 'text-gray-500 hover:bg-primary-500 hover:text-white border border-transparent'}`}
               >
                   {zone}
               </button>
@@ -124,7 +124,7 @@ const ToolPanel = () => {
                 <button 
                     key={tool.label}
                     onClick={tool.action}
-                    className="aspect-square bg-gray-50 border border-gray-200 rounded-lg flex flex-col items-center justify-center gap-2 hover:border-indigo-500 hover:text-indigo-600 transition-colors text-gray-500 shadow-sm"
+                    className="aspect-square bg-white border border-gray-200 rounded-lg flex flex-col items-center justify-center gap-2 hover:bg-primary-500 hover:border-primary-600 hover:text-white transition-all text-gray-500 shadow-sm"
                 >
                     <tool.icon size={18} strokeWidth={2} />
                     <span className="text-[9px] font-black uppercase">{tool.label}</span>
@@ -141,7 +141,7 @@ const ToolPanel = () => {
               <button 
                 key={s}
                 onClick={() => setSize(s)}
-                className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${size === s ? 'bg-white border border-gray-200 text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700 border border-transparent'}`}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${size === s ? 'bg-primary-600 border border-primary-600 text-white shadow-sm' : 'text-gray-500 hover:bg-primary-500 hover:text-white border border-transparent'}`}
               >
                   {s}
               </button>
@@ -162,9 +162,9 @@ const ToolPanel = () => {
                 <button 
                     key={f.name}
                     onClick={() => setFabric(f.name)}
-                    className={`p-3 rounded-lg border text-left transition-all shadow-sm ${fabric === f.name ? 'border-indigo-500 bg-indigo-50 ring-1 ring-indigo-500' : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'}`}
+                    className={`p-3 rounded-lg border text-left transition-all shadow-sm ${fabric === f.name ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-500' : 'border-gray-200 bg-white hover:border-primary-500 hover:bg-primary-50'}`}
                 >
-                    <div className={`text-xs font-bold ${fabric === f.name ? 'text-indigo-700' : 'text-gray-700'}`}>{f.name}</div>
+                    <div className={`text-xs font-bold ${fabric === f.name ? 'text-primary-700' : 'text-gray-700'}`}>{f.name}</div>
                     <div className="text-[10px] text-gray-500 font-medium">{f.price}</div>
                 </button>
             ))}

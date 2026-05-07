@@ -26,8 +26,12 @@ const authApi = {
     return response.data
   },
 
-  sendOtp: async (phone) => {
-    const response = await axiosInstance.post('/auth/send-otp', { phone })
+  sendOtp: async ({ contact, phone, email, type }) => {
+    const otpContact = contact || phone || email
+    const response = await axiosInstance.post('/auth/send-otp', {
+      contact: otpContact,
+      type: type || (email || otpContact?.includes('@') ? 'email' : 'phone')
+    })
     return response.data
   }
 }

@@ -12,18 +12,26 @@ const orderSchema = new mongoose.Schema({
             qty: { type: Number, required: true },
             image: { type: String, required: true },
             price: { type: Number, required: true },
+            color: { type: String },
+            size: { type: String },
+            designId: { type: String },
+            isCustom: { type: Boolean, default: false },
             product: {
                 type: mongoose.Schema.Types.ObjectId,
-                required: true,
                 ref: 'Product'
             }
         }
     ],
     shippingAddress: {
+        firstName: { type: String },
+        lastName: { type: String },
         address: { type: String, required: true },
         city: { type: String, required: true },
+        state: { type: String },
         postalCode: { type: String, required: true },
-        country: { type: String, required: true }
+        country: { type: String, required: true },
+        phone: { type: String },
+        email: { type: String }
     },
     paymentMethod: {
         type: String,

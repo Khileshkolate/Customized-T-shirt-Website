@@ -76,9 +76,9 @@ const AdminOrders = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'confirmed': return 'bg-blue-100 text-blue-800';
-      case 'processing': return 'bg-purple-100 text-purple-800';
-      case 'shipped': return 'bg-indigo-100 text-indigo-800';
+      case 'confirmed': return 'bg-secondary-100 text-secondary-800';
+      case 'processing': return 'bg-secondary-100 text-secondary-800';
+      case 'shipped': return 'bg-primary-100 text-primary-800';
       case 'delivered': return 'bg-green-100 text-green-800';
       case 'cancelled': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
@@ -127,7 +127,7 @@ const AdminOrders = () => {
       <div className="flex items-center gap-2">
         <button
           onClick={() => viewOrderDetails(order)}
-          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+          className="p-2 text-secondary-600 hover:bg-secondary-50 rounded-lg"
           title="View Details"
         >
           <Eye className="h-4 w-4" />
@@ -153,7 +153,7 @@ const AdminOrders = () => {
         {order.orderStatus === 'confirmed' && (
           <button
             onClick={() => updateOrderStatus(order._id, 'processing')}
-            className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg"
+            className="p-2 text-secondary-600 hover:bg-secondary-50 rounded-lg"
             title="Start Processing"
           >
             <Package className="h-4 w-4" />
@@ -162,7 +162,7 @@ const AdminOrders = () => {
         {order.orderStatus === 'processing' && (
           <button
             onClick={() => updateOrderStatus(order._id, 'shipped')}
-            className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg"
+            className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg"
             title="Mark as Shipped"
           >
             <Truck className="h-4 w-4" />

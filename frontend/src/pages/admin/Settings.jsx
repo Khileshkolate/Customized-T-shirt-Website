@@ -192,7 +192,7 @@ const AdminSettings = () => {
                          <div className="absolute inset-0 bg-primary-600/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                             <span className="text-xs font-bold text-primary-700">Change</span>
                          </div>
-                         <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg flex items-center justify-center group-hover:scale-95 transition-transform duration-300">
+                         <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-600 rounded-xl shadow-lg flex items-center justify-center group-hover:scale-95 transition-transform duration-300">
                            <span className="font-black text-white text-lg">VK</span>
                          </div>
                       </div>

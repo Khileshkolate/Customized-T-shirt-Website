@@ -4,6 +4,8 @@ const {
     getDesigns,
     getMyDesigns,
     createDesign,
+    getDesignById,
+    updateDesign,
     deleteDesign
 } = require('../controllers/designController');
 const { protect, admin } = require('../middleware/auth');
@@ -13,6 +15,9 @@ router.route('/')
     .post(protect, createDesign);
 
 router.get('/my', protect, getMyDesigns);
-router.delete('/:id', protect, deleteDesign);
+router.route('/:id')
+    .get(protect, getDesignById)
+    .put(protect, updateDesign)
+    .delete(protect, deleteDesign);
 
 module.exports = router;

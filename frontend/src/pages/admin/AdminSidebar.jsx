@@ -42,7 +42,7 @@
 //           <div className="flex items-center justify-between">
 //             {!collapsed && (
 //               <div className="flex items-center gap-3">
-//                 <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-purple-600 rounded-lg flex items-center justify-center">
+//                 <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-secondary-600 rounded-lg flex items-center justify-center">
 //                   <span className="font-bold">P</span>
 //                 </div>
 //                 <span className="text-xl font-bold">PrintCraft</span>
@@ -86,7 +86,7 @@
 //           {!collapsed && (
 //             <div className="mb-4">
 //               <div className="flex items-center gap-3">
-//                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-full flex items-center justify-center">
+//                 <div className="w-10 h-10 bg-gradient-to-br from-secondary-500 to-primary-400 rounded-full flex items-center justify-center">
 //                   <span className="font-bold text-white">A</span>
 //                 </div>
 //                 <div>
@@ -175,7 +175,7 @@ const AdminSidebar = () => {
         <div className="flex items-center justify-between">
           {!collapsed && (
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-600 rounded-xl flex items-center justify-center shadow-lg">
                 <span className="font-bold text-xl">VK</span>
               </div>
               <div>
@@ -185,7 +185,7 @@ const AdminSidebar = () => {
             </div>
           )}
           {collapsed && (
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg mx-auto">
+            <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-600 rounded-xl flex items-center justify-center shadow-lg mx-auto">
               <span className="font-bold text-lg">VK</span>
             </div>
           )}
@@ -223,7 +223,7 @@ const AdminSidebar = () => {
               to={item.path}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                 isActive
-                  ? 'bg-gradient-to-r from-primary-600 to-purple-600 text-white shadow-lg'
+                  ? 'bg-gradient-to-r from-primary-600 to-secondary-600 text-white shadow-lg'
                   : 'text-gray-300 hover:bg-gray-800 hover:text-white'
               }`}
             >
@@ -258,7 +258,7 @@ const AdminSidebar = () => {
 
         {/* User Profile */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-xl flex items-center justify-center shadow-lg">
+          <div className="w-10 h-10 bg-gradient-to-br from-secondary-500 to-primary-400 rounded-xl flex items-center justify-center shadow-lg">
             <span className="font-bold text-white">
               {(user?.name || 'Admin').charAt(0).toUpperCase()}
             </span>

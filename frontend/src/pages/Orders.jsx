@@ -8,9 +8,11 @@ import Loader from '../components/common/Loader';
 
 const StatusBadge = ({ status }) => {
   switch (status) {
+    case 'pending': return <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-100 text-gray-600 font-semibold text-sm rounded-full"><Package className="h-4 w-4" /> Pending</span>;
     case 'processing': return <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-600 font-semibold text-sm rounded-full"><Package className="h-4 w-4" /> Processing</span>;
-    case 'shipped': return <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-600 font-semibold text-sm rounded-full"><Truck className="h-4 w-4" /> Shipped</span>;
+    case 'shipped': return <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-secondary-50 text-secondary-600 font-semibold text-sm rounded-full"><Truck className="h-4 w-4" /> Shipped</span>;
     case 'delivered': return <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-600 font-semibold text-sm rounded-full"><CheckCircle2 className="h-4 w-4" /> Delivered</span>;
+    case 'cancelled': return <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 font-semibold text-sm rounded-full"><Package className="h-4 w-4" /> Cancelled</span>;
     default: return null;
   }
 };
@@ -25,7 +27,7 @@ const Orders = () => {
     const fetchOrders = async () => {
       try {
         const { data } = await axios.get('/orders/myorders');
-        setOrders(data);
+        setOrders(data.data || []);
       } catch (error) {
         console.error('Error fetching orders:', error);
       } finally {
@@ -101,7 +103,9 @@ const Orders = () => {
                     </div>
                     <div>
                         <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Ship To</p>
-                        <p className="font-medium text-primary-600 cursor-pointer hover:underline">{order.shippingAddress?.firstName} {order.shippingAddress?.lastName}</p>
+                        <p className="font-medium text-primary-600 cursor-pointer hover:underline">
+                          {[order.shippingAddress?.firstName, order.shippingAddress?.lastName].filter(Boolean).join(' ') || order.shippingAddress?.address || 'Shipping address'}
+                        </p>
                     </div>
                   </div>
                   <div className="text-right">
@@ -117,9 +121,9 @@ const Orders = () => {
                 {/* Order Status Bar */}
                 <div className="px-6 pt-5 pb-2">
                    <h3 className="text-xl font-bold text-gray-900 flex items-center gap-4">
-                      <StatusBadge status={order.status} />
-                      {order.status === 'delivered' && <span className="text-sm font-medium text-gray-500">Delivered on {new Date(new Date(order.createdAt).getTime() + 4 * 24 * 60 * 60 * 1000).toLocaleDateString()}</span>}
-                      {order.status === 'shipped' && <span className="text-sm font-medium text-gray-500">Arriving on {new Date(new Date(order.createdAt).getTime() + 4 * 24 * 60 * 60 * 1000).toLocaleDateString()}</span>}
+                      <StatusBadge status={order.orderStatus} />
+                      {order.orderStatus === 'delivered' && <span className="text-sm font-medium text-gray-500">Delivered on {new Date(new Date(order.createdAt).getTime() + 4 * 24 * 60 * 60 * 1000).toLocaleDateString()}</span>}
+                      {order.orderStatus === 'shipped' && <span className="text-sm font-medium text-gray-500">Arriving on {new Date(new Date(order.createdAt).getTime() + 4 * 24 * 60 * 60 * 1000).toLocaleDateString()}</span>}
                    </h3>
                 </div>
 
@@ -131,7 +135,11 @@ const Orders = () => {
                         {item.image ? <img src={item.image} alt={item.name} className="w-full h-full object-cover" /> : '🎨'}
                       </div>
                       <div className="flex-1">
-                        <Link to={`/products/${item.product}`} className="text-lg font-bold text-gray-900 hover:text-primary-600 transition-colors line-clamp-1">{item.name}</Link>
+                        {item.product ? (
+                          <Link to={`/products/${item.product}`} className="text-lg font-bold text-gray-900 hover:text-primary-600 transition-colors line-clamp-1">{item.name}</Link>
+                        ) : (
+                          <div className="text-lg font-bold text-gray-900 line-clamp-1">{item.name}</div>
+                        )}
                         <p className="text-sm text-gray-500 mt-1 mb-2">Return window closed on {new Date(new Date(order.createdAt).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}</p>
                         
                         <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500 font-medium">

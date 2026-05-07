@@ -49,4 +49,15 @@ const productSchema = new mongoose.Schema({
     timestamps: true
 });
 
+productSchema.virtual('stock')
+    .get(function() {
+        return this.countInStock;
+    })
+    .set(function(value) {
+        this.countInStock = value;
+    });
+
+productSchema.set('toJSON', { virtuals: true });
+productSchema.set('toObject', { virtuals: true });
+
 module.exports = mongoose.model('Product', productSchema);

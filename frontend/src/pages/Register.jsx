@@ -90,16 +90,7 @@ const Register = () => {
 
   setLoading(true);
   try {
-    console.log('Sending registration data:', {
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      password: formData.password // Note: In production, this shouldn't be logged
-    });
-
     const result = await register(formData);
-    
-    console.log('Registration result:', result);
     
     if (result.success) {
       toast.success(`OTP sent to +91 ${formData.phone}`);
@@ -150,7 +141,7 @@ const Register = () => {
     setLoading(true);
     const result = await verifyOtp(enteredOtp, formData.phone);
     if (result.success) {
-      toast.success('Registration successful! 🎉');
+      toast.success('Registration successful!');
       navigate('/');
     } else {
       toast.error('Invalid OTP. Please try again.');
@@ -248,7 +239,7 @@ const Register = () => {
                       value={formData.password}
                       onChange={handleChange}
                       className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      placeholder="••••••••"
+                      placeholder="********"
                       minLength="8"
                       required
                     />
@@ -274,7 +265,7 @@ const Register = () => {
                       value={formData.confirmPassword}
                       onChange={handleChange}
                       className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      placeholder="••••••••"
+                      placeholder="********"
                       minLength="8"
                       required
                     />
@@ -363,7 +354,7 @@ const Register = () => {
                   onClick={() => setOtpSent(false)}
                   className="w-full border border-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-50"
                 >
-                  ← Back to Registration
+                  &lt;- Back to Registration
                 </button>
               </div>
             </motion.div>

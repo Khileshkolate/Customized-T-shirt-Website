@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
 // Providers
@@ -40,6 +40,11 @@ import AdminSettings from './pages/admin/Settings'; // NEW ROUTE
 // Styles
 import './styles/globals.css';
 
+const DesignRedirect = () => {
+  const { productId } = useParams();
+  return <Navigate to={productId ? `/designer?product=${productId}` : '/designer'} replace />;
+};
+
 const AppContent = () => {
   const location = useLocation();
   const isAdminPath = location.pathname.startsWith('/admin');
@@ -64,7 +69,7 @@ const AppContent = () => {
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<Profile />} />
             <Route path="/design" element={<Navigate to="/designer" replace />} />
-            <Route path="/design/:productId" element={<Navigate to="/designer" replace />} />
+            <Route path="/design/:productId" element={<DesignRedirect />} />
             <Route path="/designs" element={<MyDesigns />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />

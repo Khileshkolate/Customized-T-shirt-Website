@@ -42,7 +42,7 @@ const RightPanel = () => {
       canvas.renderAll();
 
       const designImage = canvas.toDataURL({ format: 'png', quality: 0.8 });
-      const productId = searchParams.get('product') || 'custom-1';
+      const productId = searchParams.get('product');
 
       addToCart({
           productId: productId,
@@ -52,7 +52,8 @@ const RightPanel = () => {
           color: shirtColor,
           size: size,
           quantity: qty,
-          designId: Date.now().toString()
+          designId: Date.now().toString(),
+          isCustom: !productId
       });
 
       toast.success('Custom design added to cart!');
@@ -68,9 +69,9 @@ const RightPanel = () => {
           {/* CONTEXTUAL OBJECT EDITOR */}
           {activeObject && (
             <div className="block animate-in fade-in slide-in-from-right-4 duration-300">
-                <h3 className="text-[10px] font-bold tracking-widest text-indigo-600 mb-4 uppercase flex justify-between items-center bg-indigo-50 px-3 py-2 rounded-md">
+                <h3 className="text-[10px] font-bold tracking-widest text-primary-600 mb-4 uppercase flex justify-between items-center bg-primary-50 px-3 py-2 rounded-md">
                    Edit {activeObject.type === 'i-text' || activeObject.type === 'text' ? 'Text' : 'Shape'}
-                   <button onClick={() => { canvas.discardActiveObject(); canvas.renderAll(); }} className="text-indigo-400 hover:text-indigo-700 text-xs">Done</button>
+                   <button onClick={() => { canvas.discardActiveObject(); canvas.renderAll(); }} className="text-gray-500 hover:text-primary-600 font-bold text-xs transition-colors">Done</button>
                 </h3>
                 
                 <div className="space-y-6 bg-gray-50 rounded-xl border border-gray-200 p-5">
@@ -98,8 +99,8 @@ const RightPanel = () => {
                     <div className="space-y-3">
                         <label className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">Scale & Resize</label>
                         <div className="flex gap-2">
-                           <button onClick={() => { activeObject.scale(activeObject.scaleX * 0.9); canvas.renderAll(); saveHistory(); }} className="flex-1 py-1.5 bg-white border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 rounded text-sm font-bold text-gray-600 transition-all">-</button>
-                           <button onClick={() => { activeObject.scale(activeObject.scaleX * 1.1); canvas.renderAll(); saveHistory(); }} className="flex-1 py-1.5 bg-white border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 rounded text-sm font-bold text-gray-600 transition-all">+</button>
+                           <button onClick={() => { activeObject.scale(activeObject.scaleX * 0.9); canvas.renderAll(); saveHistory(); }} className="flex-1 py-1.5 bg-white border border-gray-200 hover:border-primary-500 hover:bg-primary-500 hover:text-white rounded text-sm font-bold text-gray-600 transition-all">-</button>
+                           <button onClick={() => { activeObject.scale(activeObject.scaleX * 1.1); canvas.renderAll(); saveHistory(); }} className="flex-1 py-1.5 bg-white border border-gray-200 hover:border-primary-500 hover:bg-primary-500 hover:text-white rounded text-sm font-bold text-gray-600 transition-all">+</button>
                         </div>
                     </div>
 
@@ -114,7 +115,7 @@ const RightPanel = () => {
                                         canvas.renderAll(); 
                                         saveHistory(); 
                                     }}
-                                    className="w-full text-xs font-semibold p-2 rounded-md border border-gray-200 bg-white focus:ring-2 focus:ring-indigo-100 outline-none"
+                                    className="w-full text-xs font-semibold p-2 rounded-md border border-gray-200 bg-white focus:ring-2 focus:ring-primary-100 outline-none"
                                 >
                                     <option value="sans-serif">Sans Serif</option>
                                     <option value="serif">Serif</option>
@@ -136,7 +137,7 @@ const RightPanel = () => {
                                                 canvas.renderAll(); 
                                                 saveHistory(); 
                                             }}
-                                            className="flex-1 py-2 text-[10px] font-bold text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 uppercase border-r border-gray-100 last:border-0 transition-colors"
+                                            className="flex-1 py-2 text-[10px] font-bold text-gray-600 bg-white hover:bg-primary-500 hover:text-white uppercase border-r border-gray-200 last:border-0 transition-colors"
                                         >
                                             {align}
                                         </button>
@@ -156,7 +157,7 @@ const RightPanel = () => {
                 {['Front', 'Back', 'Pocket'].map(zone => (
                     <div key={zone} className="flex justify-between text-xs items-center font-medium">
                         <div className="flex items-center gap-2 text-gray-600">
-                            <div className={`w-1.5 h-1.5 rounded-full ${designStatus[zone] !== 'empty' ? 'bg-indigo-500' : 'bg-gray-300'}`} />
+                            <div className={`w-1.5 h-1.5 rounded-full ${designStatus[zone] !== 'empty' ? 'bg-primary-500' : 'bg-gray-300'}`} />
                             <span>{zone}</span>
                         </div>
                         <span className="text-gray-400 uppercase text-[10px] tracking-wider">{designStatus[zone]}</span>
@@ -205,7 +206,7 @@ const RightPanel = () => {
               </div>
               
               {hasCustomDesign && (
-                  <div className="flex justify-between text-[11px] text-indigo-600 font-bold bg-indigo-100/50 px-2 py-1.5 rounded">
+                  <div className="flex justify-between text-[11px] text-gray-900 font-bold bg-secondary-300/50 px-2 py-1.5 rounded">
                       <span>Design Fee</span>
                       <span>+₹50</span>
                   </div>
@@ -217,9 +218,9 @@ const RightPanel = () => {
               </div>
           </div>
 
-          <button onClick={handleAddToCart} className="w-full py-4 rounded-xl text-sm font-bold text-white bg-indigo-600 focus:ring-4 focus:ring-indigo-100 shadow-xl hover:shadow-indigo-500/20 hover:bg-indigo-700 transition-all active:scale-[0.98] flex justify-between items-center px-6">
+          <button onClick={handleAddToCart} className="w-full py-4 rounded-xl text-sm font-bold text-gray-900 hover:text-white bg-secondary-500 focus:ring-4 focus:ring-secondary-200 shadow-xl hover:shadow-primary-500/20 hover:bg-primary-600 transition-all active:scale-[0.98] flex justify-between items-center px-6 group">
               <span>ADD TO CART</span>
-              <span className="text-indigo-100">₹{totalPrice}</span>
+              <span className="text-gray-800 group-hover:text-white transition-colors">₹{totalPrice}</span>
           </button>
       </div>
 

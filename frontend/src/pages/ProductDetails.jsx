@@ -6,8 +6,7 @@ import Loader from '../components/common/Loader';
 import { useCart } from '../contexts/CartContext';
 import axios from '../utils/axiosInstance';
 import toast from 'react-hot-toast';
-
-
+import useAdminStore from '../store/adminStore';
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -22,6 +21,49 @@ const ProductDetails = () => {
   const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
+
+  const { mockups, fetchMockups, colors: adminColors, fetchAttributes } = useAdminStore();
+
+  useEffect(() => {
+    if (Object.keys(mockups).length === 0) fetchMockups();
+    if (adminColors.length === 0) fetchAttributes();
+  }, []);
+
+  const getProductImage = () => {
+    if (!product || !product.type) return null;
+    let selectedColorHex = selectedColor || product.colors?.[0] || '#FFFFFF';
+    const matchedColorObj = adminColors.find(c => c.meta?.hex?.toLowerCase() === selectedColorHex?.toLowerCase());
+    const colorName = matchedColorObj ? matchedColorObj.name : 'White';
+    const key = `${product.type}_${colorName}_front`;
+    return mockups[key] || null;
+  };
+
+  const getMockupImages = () => {
+    if (!product || !product.type) return [];
+    let selectedColorHex = selectedColor || product.colors?.[0] || '#FFFFFF';
+    const matchedColorObj = adminColors.find(c => c.meta?.hex?.toLowerCase() === selectedColorHex?.toLowerCase());
+    const colorName = matchedColorObj ? matchedColorObj.name : 'White';
+    
+    const frontKey = `${product.type}_${colorName}_front`;
+    const backKey = `${product.type}_${colorName}_back`;
+    
+    const images = [];
+    if (mockups[frontKey]) images.push(mockups[frontKey]);
+    if (mockups[backKey]) images.push(mockups[backKey]);
+    
+    return images;
+  };
+
+  const displayImages = getMockupImages().length > 0 
+    ? getMockupImages() 
+    : (product?.images?.length > 0 ? product.images : [getProductImage()]).filter(Boolean);
+
+  // Clamp active image if changing color reduces the available images
+  useEffect(() => {
+    if (activeImage >= displayImages.length && displayImages.length > 0) {
+      setActiveImage(0);
+    }
+  }, [displayImages.length, activeImage]);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -98,27 +140,54 @@ const ProductDetails = () => {
           >
             {/* Thumbnails */}
             <div className="flex lg:flex-col gap-4 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 hide-scrollbar">
-              {product.images?.map((img, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setActiveImage(idx)}
-                  className={`relative w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden bg-gray-100 ${
-                    activeImage === idx ? 'ring-2 ring-primary-600' : 'ring-1 ring-gray-200'
-                  }`}
-                >
-                  <div className="absolute inset-0 flex items-center justify-center text-gray-300 text-2xl">
-                    {/* Fallback image placeholder icon */}
-                    🎨
-                  </div>
-                </button>
-              ))}
+              {displayImages.map((img, idx) => {
+                const imgSrc = img?.url || img;
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveImage(idx)}
+                    className={`relative w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden bg-gray-100 ${
+                      activeImage === idx ? 'ring-2 ring-primary-600' : 'ring-1 ring-gray-200'
+                    }`}
+                  >
+                    {imgSrc ? (
+                      <img src={imgSrc} alt="Thumbnail" className="w-full h-full object-contain p-2" />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center text-gray-300 text-2xl">
+                        🎨
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
             </div>
             
             {/* Main Image */}
-            <div className="flex-1 aspect-square md:aspect-[4/5] bg-gray-100 rounded-3xl overflow-hidden relative shadow-inner flex items-center justify-center">
-              <div className="text-9xl opacity-20 filter grayscale">
-                👕
-              </div>
+            <div className="flex-1 aspect-square md:aspect-[4/5] bg-gradient-to-br from-gray-50 to-gray-200 rounded-3xl overflow-hidden relative shadow-inner flex items-center justify-center p-6">
+              {(() => {
+                const currentImageObj = displayImages[activeImage];
+                const mainImgSrc = currentImageObj?.url || currentImageObj;
+                
+                return mainImgSrc ? (
+                  <motion.img 
+                    key={`${selectedColor}-${activeImage}`}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                    src={mainImgSrc} 
+                    alt={product.name} 
+                    className="w-full h-full object-contain" 
+                  />
+                ) : (
+                  <div className="text-9xl opacity-20 filter grayscale drop-shadow-xl">
+                    {product.type === 't-shirt' && '👕'}
+                    {product.type === 'mug' && '☕'}
+                    {product.type === 'frame' && '🖼️'}
+                    {product.type === 'hoodie' && '🧥'}
+                    {!['t-shirt', 'mug', 'frame', 'hoodie'].includes(product.type) && '👕'}
+                  </div>
+                );
+              })()}
               {product.tags?.[0] && (
                 <div className="absolute top-6 left-6 bg-white/90 backdrop-blur px-4 py-2 rounded-full text-sm font-bold shadow-sm">
                   {product.tags[0]}
@@ -237,7 +306,7 @@ const ProductDetails = () => {
               
               <button
                 onClick={handleCustomize}
-                className="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-primary-600 to-indigo-600 text-white px-8 py-4 rounded-2xl font-bold hover:from-primary-700 hover:to-indigo-700 transition-all hover:shadow-xl hover:-translate-y-1 shadow-indigo-500/30"
+                className="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-primary-600 to-primary-600 text-white px-8 py-4 rounded-2xl font-bold hover:from-primary-700 hover:to-primary-700 transition-all hover:shadow-xl hover:-translate-y-1 shadow-primary-500/30"
               >
                 <Palette className="h-5 w-5" />
                 Customize Design
@@ -251,7 +320,7 @@ const ProductDetails = () => {
                 <span className="font-medium">Secure Payment</span>
               </div>
               <div className="flex items-center gap-3 text-sm text-gray-600">
-                <Truck className="h-5 w-5 text-blue-500" />
+                <Truck className="h-5 w-5 text-secondary-500" />
                 <span className="font-medium">Free Shipping</span>
               </div>
               <div className="flex items-center gap-3 text-sm text-gray-600">

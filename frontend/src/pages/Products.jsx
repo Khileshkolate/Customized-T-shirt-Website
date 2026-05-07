@@ -331,6 +331,7 @@ import {
 import axios from '../utils/axiosInstance'
 import Loader from '../components/common/Loader'
 import { motion, AnimatePresence } from 'framer-motion'
+import useAdminStore from '../store/adminStore'
 
 
 const Products = () => {
@@ -340,10 +341,16 @@ const Products = () => {
   const [viewMode, setViewMode] = useState('grid')
   const [showFilters, setShowFilters] = useState(false)
   const [hoveredProduct, setHoveredProduct] = useState(null)
-  const [searchTerm, setSearchTerm] = useState('')
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '')
+
+  useEffect(() => {
+    setSearchTerm(searchParams.get('search') || '')
+  }, [searchParams])
 
   const [selectedSort, setSelectedSort] = useState('featured')
   const [priceRange, setPriceRange] = useState([0, 5000])
+
+  const { mockups, fetchMockups, colors: adminColors, fetchAttributes } = useAdminStore()
 
   const categories = [
     { 
@@ -351,7 +358,7 @@ const Products = () => {
       name: 'T-Shirts', 
       slug: 't-shirts',
       icon: '👕',
-      color: 'from-blue-500 to-cyan-500'
+      color: 'from-secondary-500 to-primary-500'
     },
     { 
       _id: '2', 
@@ -372,14 +379,14 @@ const Products = () => {
       name: 'Cushions', 
       slug: 'cushions',
       icon: '🛋️',
-      color: 'from-pink-500 to-rose-500'
+      color: 'from-secondary-500 to-rose-500'
     },
     { 
       _id: '5', 
       name: 'Hoodies', 
       slug: 'hoodies',
       icon: '🧥',
-      color: 'from-purple-500 to-violet-500'
+      color: 'from-secondary-500 to-primary-500'
     },
     { 
       _id: '6', 
@@ -393,7 +400,7 @@ const Products = () => {
       name: 'Phone Cases', 
       slug: 'phone-cases',
       icon: '📱',
-      color: 'from-indigo-500 to-blue-500'
+      color: 'from-primary-500 to-secondary-500'
     },
     { 
       _id: '8', 
@@ -441,7 +448,19 @@ const Products = () => {
       }
     }
     fetchProducts()
+    
+    if (Object.keys(mockups).length === 0) fetchMockups()
+    if (adminColors.length === 0) fetchAttributes()
   }, [])
+
+  const getProductImage = (product) => {
+    if (!product || !product.type) return null;
+    let selectedColorHex = product.colors?.[0] || '#FFFFFF';
+    const matchedColorObj = adminColors.find(c => c.meta?.hex?.toLowerCase() === selectedColorHex?.toLowerCase());
+    const colorName = matchedColorObj ? matchedColorObj.name : 'White';
+    const key = `${product.type}_${colorName}_front`;
+    return mockups[key] || null;
+  };
 
   const filteredProducts = products.filter(product => {
     if (selectedCategory && product.category !== categories.find(c => c.slug === selectedCategory)?._id) {
@@ -498,7 +517,7 @@ const Products = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Hero Banner */}
-      <div className="relative bg-gradient-to-r from-primary-600 via-purple-600 to-pink-600 text-white py-16 overflow-hidden">
+      <div className="relative bg-gradient-to-r from-primary-700 via-primary-600 to-secondary-500 text-white py-16 overflow-hidden">
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent" />
           <div className="absolute right-0 top-0 w-1/3 h-full bg-gradient-to-l from-white/5 to-transparent" />
@@ -595,9 +614,9 @@ const Products = () => {
                     <div className="space-y-2">
                       <button
                         onClick={() => setSearchParams({})}
-                        className={`flex items-center gap-3 w-full text-left px-3 py-3 rounded-xl transition-all ${!selectedCategory ? 'bg-gradient-to-r from-primary-50 to-purple-50 text-primary-700 border border-primary-200' : 'hover:bg-gray-50'}`}
+                        className={`flex items-center gap-3 w-full text-left px-3 py-3 rounded-xl transition-all ${!selectedCategory ? 'bg-gradient-to-r from-primary-50 to-secondary-50 text-primary-700 border border-primary-200' : 'hover:bg-gray-50'}`}
                       >
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-100 to-purple-100 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-100 to-secondary-100 flex items-center justify-center">
                           <Sparkles className="h-5 w-5" />
                         </div>
                         <span className="font-medium">All Products</span>
@@ -779,21 +798,25 @@ const Products = () => {
                       {/* Product Image */}
                       <div className="relative overflow-hidden aspect-square">
                         <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                          <motion.div 
-                            className="text-5xl"
-                            animate={{ 
-                              scale: hoveredProduct === product._id ? [1, 1.1, 1] : 1,
-                              rotate: hoveredProduct === product._id ? [0, 5, -5, 0] : 0
-                            }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                          >
-                            {product.type === 't-shirt' && '👕'}
-                            {product.type === 'mug' && '☕'}
-                            {product.type === 'frame' && '🖼️'}
-                            {product.type === 'hoodie' && '🧥'}
-                            {product.type === 'cap' && '🧢'}
-                            {product.type === 'poster' && '📰'}
-                          </motion.div>
+                          {getProductImage(product) ? (
+                            <img src={getProductImage(product)} alt={product.name} className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500" />
+                          ) : (
+                            <motion.div 
+                              className="text-5xl"
+                              animate={{ 
+                                scale: hoveredProduct === product._id ? [1, 1.1, 1] : 1,
+                                rotate: hoveredProduct === product._id ? [0, 5, -5, 0] : 0
+                              }}
+                              transition={{ duration: 2, repeat: Infinity }}
+                            >
+                              {product.type === 't-shirt' && '👕'}
+                              {product.type === 'mug' && '☕'}
+                              {product.type === 'frame' && '🖼️'}
+                              {product.type === 'hoodie' && '🧥'}
+                              {product.type === 'cap' && '🧢'}
+                              {product.type === 'poster' && '📰'}
+                            </motion.div>
+                          )}
                         </div>
                         
                         <div className="absolute top-4 left-4 flex flex-wrap gap-2">
@@ -828,7 +851,7 @@ const Products = () => {
                           transition={{ duration: 0.3 }}
                         >
                           <Link
-                            to={`/design/${product._id}`}
+                            to={`/designer?product=${product._id}`}
                             className="block w-full bg-white text-gray-900 py-3 rounded-full font-semibold text-center hover:bg-gray-50 transition-colors shadow-lg hover:shadow-xl"
                           >
                             Customize Now
@@ -924,23 +947,28 @@ const Products = () => {
                     whileHover={{ x: 10, transition: { type: "spring", stiffness: 400 } }}
                     className="bg-white rounded-2xl shadow-lg p-6 flex flex-col md:flex-row gap-6 group hover:shadow-xl transition-all duration-300 border border-gray-100"
                   >
-                    <div className="md:w-48 md:h-48 w-full h-48 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center">
-                      <motion.div 
-                        className="text-5xl"
-                        animate={{ 
-                          scale: [1, 1.05, 1],
-                          rotate: [0, 5, -5, 0]
-                        }}
-                        transition={{ 
-                          scale: { duration: 3, repeat: Infinity },
-                          rotate: { duration: 2, repeat: Infinity }
-                        }}
-                      >
-                        {product.type === 't-shirt' && '👕'}
-                        {product.type === 'mug' && '☕'}
-                        {product.type === 'frame' && '🖼️'}
-                        {product.type === 'hoodie' && '🧥'}
-                      </motion.div>
+                    <div className="md:w-48 md:h-48 w-full h-48 rounded-xl flex items-center justify-center p-2 relative">
+                      <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl" />
+                      {getProductImage(product) ? (
+                        <img src={getProductImage(product)} alt={product.name} className="w-full h-full object-contain relative z-10 group-hover:scale-105 transition-transform duration-500" />
+                      ) : (
+                        <motion.div 
+                          className="text-5xl relative z-10"
+                          animate={{ 
+                            scale: [1, 1.05, 1],
+                            rotate: [0, 5, -5, 0]
+                          }}
+                          transition={{ 
+                            scale: { duration: 3, repeat: Infinity },
+                            rotate: { duration: 2, repeat: Infinity }
+                          }}
+                        >
+                          {product.type === 't-shirt' && '👕'}
+                          {product.type === 'mug' && '☕'}
+                          {product.type === 'frame' && '🖼️'}
+                          {product.type === 'hoodie' && '🧥'}
+                        </motion.div>
+                      )}
                     </div>
                     <div className="flex-1">
                       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
@@ -1013,7 +1041,7 @@ const Products = () => {
                           
                           <div className="flex gap-3">
                             <Link
-                              to={`/design/${product._id}`}
+                              to={`/designer?product=${product._id}`}
                               className="inline-flex items-center gap-2 bg-primary-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl"
                             >
                               <Palette className="h-5 w-5" />

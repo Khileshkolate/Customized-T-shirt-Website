@@ -19,6 +19,12 @@ const Login = () => {
     try {
       const result = await login(email, password);
       if (result.success) {
+        if (result.requireOtp) {
+            toast.success('OTP sent! Please verify.');
+            navigate('/otp-verification', { state: { phone: result.phone } });
+            return;
+        }
+
         if (result.data?.role === 'admin') {
            navigate('/admin');
         } else {
@@ -41,7 +47,7 @@ const Login = () => {
         className="max-w-md w-full"
       >
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-500 to-purple-600 rounded-2xl mb-6">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-500 to-secondary-600 rounded-2xl mb-6">
             <Shield className="h-8 w-8 text-white" />
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-3">Welcome Back</h1>
@@ -80,7 +86,7 @@ const Login = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-12 pr-4 py-3.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  placeholder="••••••••"
+                  placeholder="********"
                   required
                 />
               </div>
