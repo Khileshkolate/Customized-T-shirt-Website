@@ -149,9 +149,9 @@ const CanvasEditor = () => {
       
       {/* Workspace Zoom Controls */}
       <div className="absolute top-6 right-6 flex bg-white rounded-lg shadow-sm border border-gray-200 z-50 overflow-hidden">
-          <button onClick={() => setZoomLevel(z => Math.max(0.5, z - 0.1))} className="px-3 py-1.5 text-gray-600 hover:bg-gray-100 font-bold border-r border-gray-100 hover:text-indigo-600 transition-colors">-</button>
+          <button onClick={() => setZoomLevel(z => Math.max(0.5, z - 0.1))} className="px-3 py-1.5 text-gray-600 hover:bg-gray-100 font-bold border-r border-gray-100 hover:text-primary-600 transition-colors">-</button>
           <div className="px-3 py-1.5 text-[10px] font-bold text-gray-500 flex items-center w-12 justify-center tracking-widest">{Math.round(zoomLevel * 100)}%</div>
-          <button onClick={() => setZoomLevel(z => Math.min(2, z + 0.1))} className="px-3 py-1.5 text-gray-600 hover:bg-gray-100 font-bold border-l border-gray-100 hover:text-indigo-600 transition-colors">+</button>
+          <button onClick={() => setZoomLevel(z => Math.min(2, z + 0.1))} className="px-3 py-1.5 text-gray-600 hover:bg-gray-100 font-bold border-l border-gray-100 hover:text-primary-600 transition-colors">+</button>
       </div>
 
       {/* Background Grid Pattern */}
@@ -182,7 +182,7 @@ const CanvasEditor = () => {
                       <p className="text-sm text-gray-500 font-bold leading-relaxed tracking-wide">
                           No mockup image for <br/> {shirtType} — {shirtColor} — {(printZone||'Front').toUpperCase()}
                       </p>
-                      <a href="/admin" className="text-indigo-600 font-bold text-xs mt-3 hover:underline pointer-events-auto bg-indigo-50 px-4 py-2 rounded-full border border-indigo-100">
+                      <a href="/admin" className="text-primary-600 font-bold text-xs mt-3 hover:underline pointer-events-auto bg-primary-50 px-4 py-2 rounded-full border border-primary-100">
                           Go to Admin Panel to upload
                       </a>
                   </div>

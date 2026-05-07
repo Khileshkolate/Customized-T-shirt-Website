@@ -13,6 +13,7 @@ router.route('/')
     .get(protect, admin, getOrders);
 
 router.get('/myorders', protect, getMyOrders);
+router.get('/my-orders', protect, getMyOrders);
 router.get('/:id', protect, getOrderById);
 
 module.exports = router;

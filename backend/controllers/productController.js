@@ -1,11 +1,98 @@
 const Product = require('../models/Product');
+const mongoose = require('mongoose');
+
+const normalizeProductPayload = (body) => {
+    const countInStock = body.countInStock ?? body.stock;
+
+    return {
+        name: body.name,
+        description: body.description,
+        price: body.price,
+        discountPrice: body.discountPrice,
+        category: body.category,
+        type: body.type,
+        images: body.images,
+        colors: body.colors,
+        sizes: body.sizes,
+        countInStock,
+        tags: body.tags
+    };
+};
+
+const compactDefined = (payload) => {
+    return Object.fromEntries(
+        Object.entries(payload).filter(([, value]) => value !== undefined)
+    );
+};
 
 // @desc    Get all products
 // @route   GET /api/products
 // @access  Public
 const getProducts = async (req, res) => {
     try {
-        const products = await Product.find({});
+        const { category, type, q, search } = req.query;
+        const query = {};
+        const searchTerm = q || search;
+
+        if (category) {
+            query.category = category;
+        }
+
+        if (type) {
+            query.type = type;
+        }
+
+        if (searchTerm) {
+            query.$or = [
+                { name: { $regex: searchTerm, $options: 'i' } },
+                { description: { $regex: searchTerm, $options: 'i' } },
+                { tags: { $regex: searchTerm, $options: 'i' } }
+            ];
+        }
+
+        const products = await Product.find(query);
+        res.json({
+            success: true,
+            data: products
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+};
+
+// @desc    Get available product categories
+// @route   GET /api/products/categories
+// @access  Public
+const getCategories = async (req, res) => {
+    try {
+        const categories = await Product.distinct('category');
+        res.json({
+            success: true,
+            data: categories.filter(Boolean)
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+};
+
+// @desc    Search products
+// @route   GET /api/products/search?q=...
+// @access  Public
+const searchProducts = async (req, res) => {
+    try {
+        const searchTerm = req.query.q || '';
+        const products = searchTerm
+            ? await Product.find({
+                $or: [
+                    { name: { $regex: searchTerm, $options: 'i' } },
+                    { description: { $regex: searchTerm, $options: 'i' } },
+                    { tags: { $regex: searchTerm, $options: 'i' } }
+                ]
+            })
+            : [];
+
         res.json({
             success: true,
             data: products
@@ -21,6 +108,10 @@ const getProducts = async (req, res) => {
 // @access  Public
 const getProductById = async (req, res) => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(404).json({ success: false, message: 'Product not found' });
+        }
+
         const product = await Product.findById(req.params.id);
         if (product) {
             res.json({
@@ -41,17 +132,8 @@ const getProductById = async (req, res) => {
 // @access  Private/Admin
 const createProduct = async (req, res) => {
     try {
-        const product = new Product({
-            name: 'Sample Name',
-            price: 0,
-            user: req.user._id,
-            image: '/images/sample.jpg',
-            category: 'Sample Category',
-            countInStock: 0,
-            numReviews: 0,
-            description: 'Sample Description',
-            type: 't-shirt'
-        });
+        const productData = compactDefined(normalizeProductPayload(req.body));
+        const product = new Product(productData);
 
         const createdProduct = await product.save();
         res.status(201).json({
@@ -69,26 +151,11 @@ const createProduct = async (req, res) => {
 // @access  Private/Admin
 const updateProduct = async (req, res) => {
     try {
-        const {
-            name,
-            price,
-            description,
-            image,
-            category,
-            countInStock,
-            type
-        } = req.body;
-
         const product = await Product.findById(req.params.id);
 
         if (product) {
-            product.name = name || product.name;
-            product.price = price || product.price;
-            product.description = description || product.description;
-            product.image = image || product.image;
-            product.category = category || product.category;
-            product.countInStock = countInStock || product.countInStock;
-            product.type = type || product.type;
+            const updates = compactDefined(normalizeProductPayload(req.body));
+            Object.assign(product, updates);
 
             const updatedProduct = await product.save();
             res.json({
@@ -126,6 +193,8 @@ const deleteProduct = async (req, res) => {
 module.exports = {
     getProducts,
     getProductById,
+    getCategories,
+    searchProducts,
     createProduct,
     updateProduct,
     deleteProduct

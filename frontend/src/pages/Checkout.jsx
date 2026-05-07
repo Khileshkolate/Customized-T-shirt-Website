@@ -37,35 +37,116 @@ const Checkout = () => {
     if (step < 3) setStep(step + 1);
   };
 
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
+    
+    const isScriptLoaded = await loadRazorpayScript();
+    if (!isScriptLoaded) {
+      toast.error('Failed to load Razorpay SDK. Are you online?');
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
-      const orderData = {
-        orderItems: cartItems.map(item => ({
-          name: item.productName,
-          qty: item.quantity,
-          image: item.image || '/images/tshirt.jpg', // Fallback
-          price: item.price,
-          product: item.productId,
-          color: item.color,
-          size: item.size
-        })),
-        shippingAddress: address,
-        paymentMethod: 'Credit Card',
-        itemsPrice: cartTotal,
-        taxPrice: tax,
-        shippingPrice: shipping,
-        totalPrice: finalTotal
+      // 1. Create order on backend to get Razorpay order_id
+      const { data: orderDataResponse } = await axios.post('/payment/create-order', {
+        amount: finalTotal
+      });
+      
+      const options = {
+        key: orderDataResponse.key_id,
+        amount: orderDataResponse.data.amount,
+        currency: orderDataResponse.data.currency,
+        name: 'PrintCraft',
+        description: 'T-Shirt Purchase',
+        order_id: orderDataResponse.data.id,
+        handler: async function (response) {
+            try {
+              // 2. Verify Payment
+              const verifyRes = await axios.post('/payment/verify', {
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+              });
+
+              if (verifyRes.data.success) {
+                  // 3. Save order to database
+                  const orderData = {
+                    orderItems: cartItems.map(item => ({
+                      name: item.productName,
+                      qty: item.quantity,
+                      image: item.image || '/images/tshirt.jpg', // Fallback
+                      price: item.price,
+                      product: item.isCustom ? undefined : item.productId,
+                      color: item.color,
+                      size: item.size,
+                      designId: item.designId,
+                      isCustom: item.isCustom || !item.productId
+                    })),
+                    shippingAddress: {
+                      firstName: address.firstName,
+                      lastName: address.lastName,
+                      address: address.street,
+                      city: address.city,
+                      state: address.state,
+                      zipCode: address.zipCode, // the backend normalizes zipCode -> postalCode
+                      country: 'India',
+                      email: contact.email,
+                      phone: contact.phone
+                    },
+                    paymentMethod: 'Razorpay',
+                    paymentResult: {
+                        id: response.razorpay_payment_id,
+                        status: 'success',
+                        update_time: new Date().toISOString()
+                    },
+                    isPaid: true,
+                    paidAt: new Date(),
+                    itemsPrice: cartTotal,
+                    taxPrice: tax,
+                    shippingPrice: shipping,
+                    totalPrice: finalTotal
+                  };
+
+                  await axios.post('/orders', orderData);
+                  toast.success('Order placed successfully!');
+                  clearCart();
+                  navigate('/orders');
+              }
+            } catch (err) {
+              console.error(err);
+              toast.error('Payment verification failed');
+            }
+        },
+        prefill: {
+            name: `${address.firstName} ${address.lastName}`,
+            email: contact.email,
+            contact: contact.phone,
+        },
+        theme: {
+            color: '#4f46e5' // primary-600 color
+        }
       };
 
-      await axios.post('/orders', orderData);
-      toast.success('Order placed successfully!');
-      clearCart();
-      navigate('/orders');
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.on('payment.failed', function (response) {
+          toast.error(response.error.description || 'Payment Failed');
+      });
+      paymentObject.open();
+
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to place order');
+      toast.error(error.response?.data?.message || 'Failed to initiate checkout');
     } finally {
       setIsProcessing(false);
     }
@@ -191,14 +272,10 @@ const Checkout = () => {
                   <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
                     <form onSubmit={handlePlaceOrder} className="p-6 space-y-5">
                       <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl flex items-center gap-3 mb-6">
-                         <CreditCard className="h-6 w-6 text-gray-400" />
-                         <span className="text-sm font-medium text-gray-700">Credit / Debit Card (Mock)</span>
+                         <CreditCard className="h-6 w-6 text-primary-600" />
+                         <span className="text-sm font-bold text-gray-900">Secure Razorpay Checkout</span>
                       </div>
-                      <input type="text" maxLength={16} placeholder="Card Number" required value={payment.cardNumber} onChange={e => setPayment({...payment, cardNumber: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" />
-                      <div className="grid grid-cols-2 gap-5">
-                        <input type="text" placeholder="MM/YY" maxLength={5} required value={payment.expiry} onChange={e => setPayment({...payment, expiry: e.target.value})} className="px-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" />
-                        <input type="text" placeholder="CVC" maxLength={3} required value={payment.cvc} onChange={e => setPayment({...payment, cvc: e.target.value})} className="px-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" />
-                      </div>
+                      <p className="text-sm text-gray-500 mb-6">You will be redirected to Razorpay securely to complete your payment.</p>
                       
                       <button 
                         type="submit" 

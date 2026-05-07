@@ -111,7 +111,7 @@ const AdminUsers = () => {
   const userData = filteredUsers.map(user => ({
     user: (
       <div className="flex items-center">
-        <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold mr-3">
+        <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-600 rounded-full flex items-center justify-center text-white font-bold mr-3">
           {user.name?.charAt(0).toUpperCase()}
         </div>
         <div>
@@ -155,7 +155,7 @@ const AdminUsers = () => {
     ),
     role: (
       <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-        user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+        user.role === 'admin' ? 'bg-secondary-100 text-secondary-800' : 'bg-secondary-100 text-secondary-800'
       }`}>
         {user.role}
       </span>
@@ -177,7 +177,7 @@ const AdminUsers = () => {
         {user.role !== 'admin' && (
           <button
             onClick={() => promoteToAdmin(user._id)}
-            className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg"
+            className="p-2 text-secondary-600 hover:bg-secondary-50 rounded-lg"
             title="Make Admin"
           >
             <Shield className="h-4 w-4" />
@@ -275,8 +275,8 @@ const AdminUsers = () => {
               </div>
               <div className="text-sm text-gray-600">Customers</div>
             </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <UserCheck className="h-6 w-6 text-blue-600" />
+            <div className="w-12 h-12 bg-secondary-100 rounded-lg flex items-center justify-center">
+              <UserCheck className="h-6 w-6 text-secondary-600" />
             </div>
           </div>
         </div>
@@ -289,8 +289,8 @@ const AdminUsers = () => {
               </div>
               <div className="text-sm text-gray-600">Admins</div>
             </div>
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <Shield className="h-6 w-6 text-purple-600" />
+            <div className="w-12 h-12 bg-secondary-100 rounded-lg flex items-center justify-center">
+              <Shield className="h-6 w-6 text-secondary-600" />
             </div>
           </div>
         </div>

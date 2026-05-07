@@ -75,7 +75,7 @@ const Profile = () => {
           <div className="lg:w-1/4">
             <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-secondary-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
                   {user.name?.charAt(0).toUpperCase()}
                 </div>
                 <div>
@@ -97,21 +97,21 @@ const Profile = () => {
                   My Designs
                 </Link>
                 <button 
-                  onClick={() => toast.success('Wishlist coming soon!', { icon: '❤️' })}
+                  onClick={() => toast.success('Wishlist coming soon!')}
                   className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <Heart className="h-5 w-5" />
                   Wishlist
                 </button>
                 <button 
-                  onClick={() => toast.success('Payment Methods coming soon!', { icon: '💳' })}
+                  onClick={() => toast.success('Payment Methods coming soon!')}
                   className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <CreditCard className="h-5 w-5" />
                   Payment Methods
                 </button>
                 <button 
-                  onClick={() => toast.success('Settings coming soon!', { icon: '⚙️' })}
+                  onClick={() => toast.success('Settings coming soon!')}
                   className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <Settings className="h-5 w-5" />
@@ -238,10 +238,10 @@ const Profile = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-bold text-gray-900">₹{order.finalAmount}</div>
+                        <div className="font-bold text-gray-900">Rs. {order.finalAmount}</div>
                         <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
                           order.orderStatus === 'delivered' ? 'bg-green-100 text-green-800' :
-                          order.orderStatus === 'processing' ? 'bg-blue-100 text-blue-800' :
+                          order.orderStatus === 'processing' ? 'bg-secondary-100 text-secondary-800' :
                           order.orderStatus === 'cancelled' ? 'bg-red-100 text-red-800' :
                           'bg-yellow-100 text-yellow-800'
                         }`}>

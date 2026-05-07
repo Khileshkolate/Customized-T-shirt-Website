@@ -58,7 +58,7 @@ const AdminRoute = () => {
         {/* Mobile Header (Hidden on Desktop) */}
         <div className="md:hidden flex items-center justify-between bg-gradient-to-b from-gray-900 to-gray-800 p-4 shrink-0 shadow-md relative z-20">
           <div className="flex items-center gap-3">
-             <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+             <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-600 rounded-xl flex items-center justify-center shadow-lg">
                 <span className="font-bold text-xl text-white">VK</span>
              </div>
              <span className="text-white font-bold text-xl tracking-tight">ViragKala</span>

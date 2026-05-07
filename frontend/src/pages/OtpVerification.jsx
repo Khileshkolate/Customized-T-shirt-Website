@@ -11,13 +11,22 @@ const OtpVerification = () => {
   const [resendTime, setResendTime] = useState(60)
   const [canResend, setCanResend] = useState(false)
   const inputRefs = useRef([])
-  const { verifyOtp } = useAuth()
+  const { verifyOtp, sendOtp } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
-  const phone = location.state?.phone || '9876543210'
+  const phone = location.state?.phone
 
   useEffect(() => {
+    if (!phone) {
+      toast.error('Please request an OTP first')
+      navigate('/login', { replace: true })
+    }
+  }, [phone, navigate])
+
+  useEffect(() => {
+    if (!phone) return undefined
+
     const timer = setInterval(() => {
       setResendTime(prev => {
         if (prev <= 1) {
@@ -29,7 +38,7 @@ const OtpVerification = () => {
     }, 1000)
 
     return () => clearInterval(timer)
-  }, [])
+  }, [phone])
 
   const handleOtpChange = (index, value) => {
     if (value.length > 1) {
@@ -55,15 +64,22 @@ const OtpVerification = () => {
 
   const handleResendOtp = async () => {
     if (!canResend) return
-    
-    setResendTime(60)
-    setCanResend(false)
-    // In real app: await authApi.sendOtp(phone)
-    toast.success('OTP resent successfully')
+    if (!phone) return
+
+    const result = await sendOtp({ phone, type: 'phone' })
+    if (result.success) {
+      setResendTime(60)
+      setCanResend(false)
+      setOtp(['', '', '', '', '', ''])
+      inputRefs.current[0]?.focus()
+      toast.success('OTP resent successfully')
+    }
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (!phone) return
+
     const otpString = otp.join('')
     
     if (otpString.length !== 6) {
@@ -75,9 +91,18 @@ const OtpVerification = () => {
     const result = await verifyOtp(otpString, phone)
     if (!result.success) {
       toast.error('Invalid OTP. Please try again.')
+    } else {
+      toast.success('Successfully logged in!')
+      if (result.data?.role === 'admin') {
+         navigate('/admin');
+      } else {
+         navigate('/');
+      }
     }
     setLoading(false)
   }
+
+  if (!phone) return null
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">

@@ -76,7 +76,7 @@ const AdminDashboard = () => {
       icon: <ShoppingBag className="h-6 w-6" />,
       change: '+8.2%',
       trend: 'up',
-      color: 'from-blue-500 to-cyan-600'
+      color: 'from-secondary-500 to-primary-600'
     },
     {
       title: 'Total Users',
@@ -84,7 +84,7 @@ const AdminDashboard = () => {
       icon: <Users className="h-6 w-6" />,
       change: '+15.3%',
       trend: 'up',
-      color: 'from-purple-500 to-pink-600'
+      color: 'from-secondary-500 to-secondary-600'
     },
     {
       title: 'Total Products',
@@ -112,7 +112,7 @@ const AdminDashboard = () => {
       <span className={`px-3 py-1 rounded-full text-xs font-medium ${
         order.orderStatus === 'delivered' ? 'bg-green-100 text-green-800' :
         order.orderStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-        order.orderStatus === 'processing' ? 'bg-blue-100 text-blue-800' :
+        order.orderStatus === 'processing' ? 'bg-secondary-100 text-secondary-800' :
         'bg-gray-100 text-gray-800'
       }`}>
         {order.orderStatus}
@@ -199,8 +199,8 @@ const AdminDashboard = () => {
                   ₹{stats.totalOrders > 0 ? Math.round(stats.totalRevenue / stats.totalOrders) : 0}
                 </div>
               </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <BarChart3 className="h-6 w-6 text-blue-600" />
+              <div className="w-12 h-12 bg-secondary-100 rounded-lg flex items-center justify-center">
+                <BarChart3 className="h-6 w-6 text-secondary-600" />
               </div>
             </div>
           </div>

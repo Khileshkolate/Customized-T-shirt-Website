@@ -768,7 +768,7 @@ const Navbar = () => {
     const fetchProducts = async () => {
       try {
         const response = await axiosInstance.get('/products');
-        setProducts(response.data || []);
+        setProducts(response.data?.data || []);
       } catch (error) {
         console.error('Failed to fetch products for search', error);
       }
@@ -925,10 +925,10 @@ const Navbar = () => {
               whileTap={{ scale: 0.95 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              <Palette className="h-8 w-8 text-primary-600 group-hover:text-primary-700 transition-colors" />
+              <Palette className="h-8 w-8 text-secondary-500 group-hover:text-primary-600 transition-colors" />
             </motion.div>
             <span className="text-2xl font-bold text-gray-900 tracking-tight hidden sm:block">
-              Virag<span className="text-primary-600 group-hover:text-primary-700 transition-colors">Kala</span>
+              Virag<span className="text-secondary-500 group-hover:text-primary-600 transition-colors">Kala</span>
             </span>
           </Link>
 
@@ -947,7 +947,7 @@ const Navbar = () => {
                     className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-gray-700 hover:text-primary-600 hover:bg-primary-50 font-medium transition-all duration-200 group"
                     onClick={() => setIsSearchOpen(false)}
                   >
-                    <span className="text-primary-600 opacity-80 group-hover:opacity-100 transition-opacity">
+                    <span className="text-secondary-500 opacity-80 group-hover:opacity-100 group-hover:text-primary-600 transition-colors">
                       {link.icon}
                     </span>
                     <span>{link.name}</span>
@@ -1172,7 +1172,7 @@ const Navbar = () => {
                 </Link>
                 <Link
                   to="/register"
-                  className="px-5 py-2.5 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl font-medium shadow-sm hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-200"
+                  className="px-5 py-2.5 bg-gradient-to-r from-secondary-500 to-secondary-600 text-white rounded-xl font-medium shadow-sm hover:from-primary-600 hover:to-primary-700 hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-300"
                   onClick={handleNavigation}
                 >
                   Sign Up
@@ -1291,10 +1291,10 @@ const Navbar = () => {
                   <Link
                     key={link.name}
                     to={link.path}
-                    className="flex items-center gap-3 px-4 py-3.5 text-gray-700 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                    className="flex items-center gap-3 px-4 py-3.5 text-gray-700 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors group"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <span className="text-primary-600">
+                    <span className="text-secondary-500 group-hover:text-primary-600 transition-colors">
                       {link.icon}
                     </span>
                     <span className="font-medium">{link.name}</span>

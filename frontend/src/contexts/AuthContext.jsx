@@ -46,6 +46,12 @@ export const AuthProvider = ({ children }) => {
     try {
       // Regular user login (API call)
       const response = await axios.post('/auth/login', { email, password });
+      
+      // If login requires OTP (secure 2FA flow)
+      if (response.data.requireOtp) {
+          return { success: true, requireOtp: true, phone: response.data.phone, message: response.data.message };
+      }
+
       const { token, user: userData } = response.data.data;
       
       localStorage.setItem('token', token);
@@ -86,6 +92,22 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const sendOtp = async ({ contact, phone, email, type }) => {
+    try {
+      const otpContact = contact || phone || email;
+      const response = await axios.post('/auth/send-otp', {
+        contact: otpContact,
+        type: type || (email || otpContact?.includes('@') ? 'email' : 'phone')
+      });
+
+      return { success: true, message: response.data.message };
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Failed to send OTP';
+      toast.error(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  };
+
   const value = {
     user,
     loading,
@@ -94,15 +116,9 @@ export const AuthProvider = ({ children }) => {
       try {
         const { confirmPassword, ...dataToSend } = userData;
         const response = await axios.post('/auth/register', dataToSend);
-        const { token, user: newUserData } = response.data.data;
         
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(newUserData));
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        setUser(newUserData);
-        setIsAuthenticated(true);
-        toast.success('Registration successful!');
-        return { success: true, data: newUserData };
+        // Return success without signing in. SignIn happens after verifyOtp.
+        return { success: true, message: response.data.message };
       } catch (error) {
         const errorMessage = error.response?.data?.message || 'Registration failed';
         toast.error(errorMessage);
@@ -124,6 +140,7 @@ export const AuthProvider = ({ children }) => {
       }
     },
     login,
+    sendOtp,
     logout,
     updateProfile
   };

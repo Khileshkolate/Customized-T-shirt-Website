@@ -23,9 +23,26 @@ import {
   Package,
   Headphones
 } from 'lucide-react'
+import useAdminStore from '../store/adminStore'
 
 const Home = () => {
   const [loading, setLoading] = useState(false)
+  const { mockups, fetchMockups, colors: adminColors, fetchAttributes } = useAdminStore()
+  
+  useEffect(() => {
+    if (Object.keys(mockups).length === 0) fetchMockups()
+    if (adminColors.length === 0) fetchAttributes()
+  }, [])
+
+  const getProductImage = (product) => {
+    if (!product || !product.type) return null;
+    let selectedColorHex = product.colors?.[0] || '#FFFFFF';
+    const matchedColorObj = adminColors.find(c => c.meta?.hex?.toLowerCase() === selectedColorHex?.toLowerCase());
+    const colorName = matchedColorObj ? matchedColorObj.name : 'White';
+    const key = `${product.type}_${colorName}_front`;
+    return mockups[key] || null;
+  };
+
   const [testimonials] = useState([
     {
       id: 1,
@@ -59,7 +76,7 @@ const Home = () => {
       name: "T-Shirts",
       icon: "👕",
       count: "500+ Designs",
-      color: "from-blue-500 to-cyan-400"
+      color: "from-secondary-500 to-primary-400"
     },
     {
       id: 2,
@@ -73,7 +90,7 @@ const Home = () => {
       name: "Phone Cases",
       icon: "📱",
       count: "300+ Designs",
-      color: "from-purple-500 to-pink-400"
+      color: "from-secondary-500 to-secondary-400"
     },
     {
       id: 4,
@@ -94,7 +111,7 @@ const Home = () => {
       name: "Caps",
       icon: "🧢",
       count: "100+ Designs",
-      color: "from-indigo-500 to-violet-400"
+      color: "from-primary-500 to-primary-400"
     }
   ])
 
@@ -206,12 +223,12 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-primary-600 via-purple-600 to-pink-600 text-white overflow-hidden">
+      <section className="relative bg-gradient-to-br from-primary-700 via-primary-600 to-secondary-500 text-white overflow-hidden">
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent" />
           <div className="absolute right-0 top-0 w-1/3 h-full bg-gradient-to-l from-white/5 to-transparent" />
           <div className="absolute left-1/4 top-1/4 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
-          <div className="absolute right-1/4 bottom-1/4 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl" />
+          <div className="absolute right-1/4 bottom-1/4 w-96 h-96 bg-secondary-400/20 rounded-full blur-3xl" />
         </div>
         
         <div className="relative container mx-auto px-4 pt-10 pb-24 md:pt-16 md:pb-32">
@@ -340,7 +357,7 @@ const Home = () => {
                 key={index}
                 className="group relative bg-white rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-gray-100"
               >
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-500 via-purple-500 to-pink-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-600 via-primary-500 to-secondary-400 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-100 to-primary-50 text-primary-600 rounded-2xl mb-6 group-hover:scale-110 transition-transform duration-300">
                   {feature.icon}
                 </div>
@@ -372,7 +389,7 @@ const Home = () => {
             {processSteps.map((step, index) => (
               <div key={index} className="relative text-center">
                 <div className="relative z-10">
-                  <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-500 to-purple-600 text-white rounded-2xl text-2xl font-bold mb-6 mx-auto">
+                  <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-500 to-secondary-600 text-white rounded-2xl text-2xl font-bold mb-6 mx-auto">
                     {step.number}
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-3">
@@ -419,18 +436,23 @@ const Home = () => {
                 className="group relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2"
               >
                 <div className="relative overflow-hidden aspect-square">
-                  <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                    <div className="text-6xl">
-                      {product.type === 't-shirt' && '👕'}
-                      {product.type === 'mug' && '☕'}
-                      {product.type === 'frame' && '🖼️'}
-                      {product.type === 'hoodie' && '🧥'}
-                    </div>
+                  <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-4 relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl" />
+                    {getProductImage(product) ? (
+                      <img src={getProductImage(product)} alt={product.name} className="w-full h-full object-contain relative z-10 group-hover:scale-105 transition-transform duration-500" />
+                    ) : (
+                      <div className="text-6xl relative z-10">
+                        {product.type === 't-shirt' && '👕'}
+                        {product.type === 'mug' && '☕'}
+                        {product.type === 'frame' && '🖼️'}
+                        {product.type === 'hoodie' && '🧥'}
+                      </div>
+                    )}
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <div className="absolute bottom-4 left-4 right-4 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
                     <Link
-                      to={`/design/${product._id}`}
+                      to={`/designer?product=${product._id}`}
                       className="block w-full bg-white text-gray-900 py-3 rounded-full font-semibold text-center hover:bg-gray-100 transition-colors"
                     >
                       Customize Now
@@ -478,7 +500,7 @@ const Home = () => {
                     </div>
                     
                     <Link
-                      to={`/design/${product._id}`}
+                      to={`/designer?product=${product._id}`}
                       className="group inline-flex items-center gap-1 text-primary-600 hover:text-primary-700 font-semibold text-sm"
                     >
                       Design
@@ -522,7 +544,7 @@ const Home = () => {
                 <p className="text-gray-700 mb-6 italic">"{testimonial.content}"</p>
                 
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 overflow-hidden">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-secondary-400 to-secondary-500 overflow-hidden">
                     <div className="w-full h-full bg-gray-300" />
                   </div>
                   <div>
@@ -537,7 +559,7 @@ const Home = () => {
       </section>
 
 {/* Company Stats Banner */}
-      <section className="py-16 bg-gradient-to-r from-primary-600 via-purple-600 to-pink-600 text-white">
+      <section className="py-16 bg-gradient-to-r from-primary-700 via-primary-600 to-secondary-500 text-white">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
             {companyStats.map((stat, index) => (
@@ -572,7 +594,7 @@ const Home = () => {
             <div className="flex flex-wrap gap-4 justify-center">
               <Link
                 to="/register"
-                className="group inline-flex items-center gap-2 bg-gradient-to-r from-primary-600 to-purple-600 text-white px-8 py-4 rounded-full font-semibold hover:shadow-2xl hover:scale-105 transition-all duration-300"
+                className="group inline-flex items-center gap-2 bg-gradient-to-r from-primary-600 to-secondary-600 text-white px-8 py-4 rounded-full font-semibold hover:shadow-2xl hover:scale-105 transition-all duration-300"
               >
                 <Sparkles className="h-5 w-5" />
                 Get Started Free

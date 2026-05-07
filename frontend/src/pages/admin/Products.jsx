@@ -115,11 +115,11 @@
 //       </div>
 //     ),
 //     type: (
-//       <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+//       <span className="px-3 py-1 bg-secondary-100 text-secondary-800 rounded-full text-xs font-medium">
 //         {product.type}
 //       </span>
 //     ),
-//     price: `₹${product.price}`,
+//     price: `${product.price}`,
 //     stock: (
 //       <span className={`font-medium ${
 //         product.stock > 20 ? 'text-green-600' : 
@@ -139,7 +139,7 @@
 //       <div className="flex items-center gap-2">
 //         <button 
 //           onClick={() => handleEdit(product)}
-//           className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+//           className="p-2 text-secondary-600 hover:bg-secondary-50 rounded-lg"
 //         >
 //           <Edit2 className="h-4 w-4" />
 //         </button>
@@ -311,25 +311,25 @@ const Products = () => {
   });
 
   const categories = [
-    { id: 'all', name: 'All Products', icon: '📦' },
-    { id: '1', name: 'T-Shirts', icon: '👕' },
-    { id: '2', name: 'Mugs', icon: '☕' },
-    { id: '3', name: 'Photo Frames', icon: '🖼️' },
-    { id: '5', name: 'Hoodies', icon: '🧥' },
-    { id: '6', name: 'Caps', icon: '🧢' },
-    { id: '7', name: 'Phone Cases', icon: '📱' },
-    { id: '8', name: 'Posters', icon: '📰' }
+    { id: 'all', name: 'All Products', icon: 'All' },
+    { id: '1', name: 'T-Shirts', icon: 'T' },
+    { id: '2', name: 'Mugs', icon: 'M' },
+    { id: '3', name: 'Photo Frames', icon: 'F' },
+    { id: '5', name: 'Hoodies', icon: 'H' },
+    { id: '6', name: 'Caps', icon: 'C' },
+    { id: '7', name: 'Phone Cases', icon: 'P' },
+    { id: '8', name: 'Posters', icon: 'Po' }
   ];
 
   const productTypes = [
-    { value: 't-shirt', label: 'T-Shirt', icon: '👕' },
-    { value: 'mug', label: 'Mug', icon: '☕' },
-    { value: 'hoodie', label: 'Hoodie', icon: '🧥' },
-    { value: 'frame', label: 'Photo Frame', icon: '🖼️' },
-    { value: 'cap', label: 'Cap', icon: '🧢' },
-    { value: 'phone-case', label: 'Phone Case', icon: '📱' },
-    { value: 'poster', label: 'Poster', icon: '📰' },
-    { value: 'cushion', label: 'Cushion', icon: '🛋️' }
+    { value: 't-shirt', label: 'T-Shirt', icon: 'T' },
+    { value: 'mug', label: 'Mug', icon: 'M' },
+    { value: 'hoodie', label: 'Hoodie', icon: 'H' },
+    { value: 'frame', label: 'Photo Frame', icon: 'F' },
+    { value: 'cap', label: 'Cap', icon: 'C' },
+    { value: 'phone-case', label: 'Phone Case', icon: 'P' },
+    { value: 'poster', label: 'Poster', icon: 'Po' },
+    { value: 'cushion', label: 'Cu' }
   ];
 
   useEffect(() => {
@@ -505,13 +505,7 @@ const Products = () => {
               {/* Product Image */}
               <div className="relative aspect-square bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
                 <span className="text-4xl">
-                  {product.type === 't-shirt' && '👕'}
-                  {product.type === 'mug' && '☕'}
-                  {product.type === 'hoodie' && '🧥'}
-                  {product.type === 'frame' && '🖼️'}
-                  {product.type === 'cap' && '🧢'}
-                  {product.type === 'phone-case' && '📱'}
-                  {product.type === 'poster' && '📰'}
+                  {product.type}
                 </span>
                 {product.discountPrice && (
                   <div className="absolute top-3 left-3 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold">
@@ -523,7 +517,7 @@ const Products = () => {
                     <Eye className="h-5 w-5 text-gray-600" />
                   </button>
                   <button className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:shadow-xl">
-                    <Edit className="h-5 w-5 text-blue-600" />
+                    <Edit className="h-5 w-5 text-secondary-600" />
                   </button>
                 </div>
               </div>
@@ -543,10 +537,10 @@ const Products = () => {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <span className="text-xl font-bold text-gray-900">
-                      ₹{product.discountPrice || product.price}
+                      Rs. {product.discountPrice || product.price}
                     </span>
                     {product.discountPrice && (
-                      <span className="text-sm text-gray-400 line-through">₹{product.price}</span>
+                      <span className="text-sm text-gray-400 line-through">Rs. {product.price}</span>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
@@ -563,7 +557,7 @@ const Products = () => {
                 {/* Actions */}
                 <div className="flex gap-2">
                   <Link
-                    to={`/design/${product._id}`}
+                    to={`/designer?product=${product._id}`}
                     className="flex-1 text-center py-2 bg-primary-50 text-primary-700 rounded-lg hover:bg-primary-100 transition-colors text-sm font-medium"
                   >
                     Preview
@@ -599,10 +593,7 @@ const Products = () => {
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center">
                         <span className="text-lg">
-                          {product.type === 't-shirt' && '👕'}
-                          {product.type === 'mug' && '☕'}
-                          {product.type === 'hoodie' && '🧥'}
-                          {product.type === 'frame' && '🖼️'}
+                          {product.type}
                         </span>
                       </div>
                       <div>
@@ -617,9 +608,9 @@ const Products = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="font-medium text-gray-900">₹{product.discountPrice || product.price}</div>
+                    <div className="font-medium text-gray-900">Rs. {product.discountPrice || product.price}</div>
                     {product.discountPrice && (
-                      <div className="text-sm text-gray-400 line-through">₹{product.price}</div>
+                      <div className="text-sm text-gray-400 line-through">Rs. {product.price}</div>
                     )}
                   </td>
                   <td className="px-6 py-4">
@@ -638,7 +629,7 @@ const Products = () => {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg">
+                      <button className="p-2 text-secondary-600 hover:bg-secondary-50 rounded-lg">
                         <Edit className="h-4 w-4" />
                       </button>
                       <button
@@ -718,7 +709,7 @@ const Products = () => {
                     {/* Price */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Price (₹)
+                        Price (Rs.)
                       </label>
                       <div className="relative">
                         <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -736,7 +727,7 @@ const Products = () => {
                     {/* Discount Price */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Discount Price (₹) <span className="text-gray-400">Optional</span>
+                        Discount Price (Rs.) <span className="text-gray-400">Optional</span>
                       </label>
                       <div className="relative">
                         <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />

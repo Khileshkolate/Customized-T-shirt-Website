@@ -1,8 +1,15 @@
 import { create } from 'zustand';
-import { getMockups, uploadMockup, deleteMockup } from '../api/adminApi';
+import { getMockups, uploadMockup } from '../api/adminApi';
 import toast from 'react-hot-toast';
 
 const BASE_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || '';
+const resolveAssetUrl = (url) => {
+  if (!url || /^https?:\/\//i.test(url) || url.startsWith('data:')) {
+    return url;
+  }
+
+  return `${BASE_URL}${url.startsWith('/') ? url : `/${url}`}`;
+};
 
 const useAdminStore = create((set, get) => ({
   mockups: {},
@@ -60,7 +67,7 @@ const useAdminStore = create((set, get) => ({
 
       mockupsData.forEach(m => {
         const key = m.key;
-        formattedMockups[key] = m.imageUrl;
+        formattedMockups[key] = resolveAssetUrl(m.imageUrl);
       });
 
       set({ mockups: formattedMockups, loading: false });
@@ -74,10 +81,9 @@ const useAdminStore = create((set, get) => ({
   
   // `key` is in format "Type_Color_view" (e.g. "Round Neck_White_front")
   uploadMockup: async (key, file) => {
+    const toastId = toast.loading('Uploading Mockup...');
+
     try {
-      const toastId = toast.loading('Uploading Mockup...');
-      const [type, color, view] = key.split('_');
-      
       const formData = new FormData();
       formData.append('key', key);
       formData.append('image', file);

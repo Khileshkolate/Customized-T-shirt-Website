@@ -2,6 +2,21 @@ const Mockup = require('../models/Mockup');
 const path = require('path');
 const fs = require('fs');
 
+const resolveUploadPath = (imageUrl) => {
+    return path.join(__dirname, '..', imageUrl.replace(/^\/+/, ''));
+};
+
+const removeFileIfExists = (imageUrl) => {
+    if (!imageUrl) {
+        return;
+    }
+
+    const filePath = resolveUploadPath(imageUrl);
+    if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+    }
+};
+
 // @desc    Get all mockups
 // @route   GET /api/mockups
 // @access  Public
@@ -22,6 +37,8 @@ const getMockups = async (req, res) => {
 // @route   POST /api/mockups
 // @access  Private/Admin
 const uploadMockup = async (req, res) => {
+    let uploadedImageUrl;
+
     try {
         const { key } = req.body;
         if (!req.file) {
@@ -29,18 +46,21 @@ const uploadMockup = async (req, res) => {
         }
 
         const imageUrl = `/uploads/mockups/${req.file.filename}`;
+        uploadedImageUrl = imageUrl;
         
         // Parse key to get type, color, view
-        const [type, color, view] = key.split('_');
+        const [type, color, view] = (key || '').split('_');
+
+        if (!type || !color || !['front', 'back'].includes(view)) {
+            removeFileIfExists(imageUrl);
+            return res.status(400).json({ success: false, message: 'Mockup key must use type_color_front or type_color_back format' });
+        }
 
         let mockup = await Mockup.findOne({ key });
 
         if (mockup) {
             // Delete old file if exists
-            const oldPath = path.join(__dirname, '..', mockup.imageUrl);
-            if (fs.existsSync(oldPath)) {
-                fs.unlinkSync(oldPath);
-            }
+            removeFileIfExists(mockup.imageUrl);
             mockup.imageUrl = imageUrl;
             await mockup.save();
         } else {
@@ -58,6 +78,7 @@ const uploadMockup = async (req, res) => {
             data: mockup
         });
     } catch (error) {
+        removeFileIfExists(uploadedImageUrl);
         console.error(error);
         res.status(500).json({ success: false, message: 'Server Error' });
     }
@@ -70,10 +91,7 @@ const deleteMockup = async (req, res) => {
     try {
         const mockup = await Mockup.findOne({ key: req.params.key });
         if (mockup) {
-            const filePath = path.join(__dirname, '..', mockup.imageUrl);
-            if (fs.existsSync(filePath)) {
-                fs.unlinkSync(filePath);
-            }
+            removeFileIfExists(mockup.imageUrl);
             await mockup.deleteOne();
             res.json({ success: true, message: 'Mockup removed' });
         } else {

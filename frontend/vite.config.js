@@ -9,6 +9,11 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       includeAssets: ['vite.svg', 'pwa-192x192.png', 'pwa-512x512.png'],
+      workbox: {
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true
+      },
       manifest: {
         name: 'ViragKala Studio',
         short_name: 'ViragKala',
@@ -29,6 +34,22 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'
+          }
+        ],
+        shortcuts: [
+          {
+            name: "Shopping Cart",
+            short_name: "Cart",
+            description: "View your shopping cart",
+            url: "/cart",
+            icons: [{ src: "/pwa-192x192.png", sizes: "192x192", type: "image/png" }]
+          },
+          {
+            name: "Settings",
+            short_name: "Settings",
+            description: "Go to Settings",
+            url: "/admin/settings",
+            icons: [{ src: "/pwa-192x192.png", sizes: "192x192", type: "image/png" }]
           }
         ]
       }
