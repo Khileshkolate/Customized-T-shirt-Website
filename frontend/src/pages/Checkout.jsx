@@ -68,7 +68,7 @@ const Checkout = () => {
         key: orderDataResponse.key_id,
         amount: orderDataResponse.data.amount,
         currency: orderDataResponse.data.currency,
-        name: 'PrintCraft',
+        name: 'ViragKala',
         description: 'T-Shirt Purchase',
         order_id: orderDataResponse.data.id,
         handler: async function (response) {
@@ -169,7 +169,7 @@ const Checkout = () => {
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-6 flex items-center justify-between">
           <Link to="/" className="text-xl font-black text-gray-900 tracking-tighter">
-            Print<span className="text-primary-600">Craft</span>
+            Virag<span className="text-primary-600">Kala</span>
           </Link>
           <div className="flex items-center gap-2 text-sm font-medium text-gray-500">
             <Lock className="h-4 w-4" />
