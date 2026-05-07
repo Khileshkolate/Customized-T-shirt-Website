@@ -15,7 +15,8 @@ const OtpVerification = () => {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const contact = location.state?.contact || location.state?.phone
+  // Safety fallback: Check multiple possible fields for contact info
+  const contact = location.state?.contact || location.state?.email || location.state?.phone;
 
   useEffect(() => {
     if (!contact) {

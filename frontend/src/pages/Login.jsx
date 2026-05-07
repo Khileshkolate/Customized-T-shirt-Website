@@ -21,7 +21,9 @@ const Login = () => {
       if (result.success) {
         if (result.requireOtp) {
             toast.success('OTP sent! Please verify.');
-            navigate('/otp-verification', { state: { contact: result.contact } });
+            // Safety fallback: Use email from local state if result.contact is missing
+            const contactInfo = result.contact || result.phone || result.email || email;
+            navigate('/otp-verification', { state: { contact: contactInfo } });
             return;
         }
 
