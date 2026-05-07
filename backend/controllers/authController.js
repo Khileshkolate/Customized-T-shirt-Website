@@ -59,8 +59,10 @@ const registerUser = async (req, res) => {
             expiresAt: new Date(Date.now() + 5 * 60000) // 5 minutes
         });
 
-        // Try sending SMS. You could also sendEmailOtp here parallelly.
-        const otpSent = await sendSmsOtp(contact, numericOtp);
+        // Try sending OTP
+        const otpSent = contact.includes('@')
+            ? await sendEmailOtp(contact, numericOtp)
+            : await sendSmsOtp(contact, numericOtp);
         if (!otpSent) {
             await Otp.deleteOne({ contact });
             return res.status(502).json({ success: false, message: 'Failed to send OTP. Please try again.' });
