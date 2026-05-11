@@ -80,8 +80,8 @@ const ToolPanel = () => {
           {colors.map((c) => (
              <div key={c._id} className="relative">
                 <button
-                  onClick={() => setShirtColor(c.name, c.meta?.hex)}
-                  className={`w-7 h-7 rounded-full shadow-sm transition-transform border border-gray-300 ${shirtColor === c.name ? 'ring-2 ring-primary-500 ring-offset-2 scale-110' : 'hover:scale-110'}`}
+                  onClick={() => setShirtColor(c.value, c.meta?.hex)}
+                  className={`w-7 h-7 rounded-full shadow-sm transition-transform border border-gray-300 ${shirtColor === c.value ? 'ring-2 ring-primary-500 ring-offset-2 scale-110' : 'hover:scale-110'}`}
                   style={{ backgroundColor: c.meta?.hex }}
                   title={c.name}
                 />

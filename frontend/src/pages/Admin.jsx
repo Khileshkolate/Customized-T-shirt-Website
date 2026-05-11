@@ -238,7 +238,7 @@ const Admin = () => {
                     {displayTypes.map(type => 
                         displayColors.map(color => 
                             VIEWS.map(view => {
-                                const key = `${type.value}_${color.value}_${view}`;
+                                const key = `${type.value.toLowerCase()}_${color.value.toLowerCase()}_${view.toLowerCase()}`;
                                 const imgData = mockups[key];
                                 const hasImg = !!imgData;
 

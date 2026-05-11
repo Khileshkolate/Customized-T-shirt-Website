@@ -40,27 +40,46 @@ const uploadMockup = async (req, res) => {
     let uploadedImageUrl;
 
     try {
-        const { key } = req.body;
-        if (!req.file) {
-            return res.status(400).json({ success: false, message: 'Please upload an image' });
+        const { key: rawKey } = req.body;
+        if (!rawKey) {
+            return res.status(400).json({ success: false, message: 'Mockup key is required' });
         }
 
-        const imageUrl = `/uploads/mockups/${req.file.filename}`;
+        const key = rawKey.toLowerCase();
+        
+        // Handle image path from Multer (Cloudinary or Local)
+        let imageUrl = req.file.path;
+        
+        // Normalize: Cloudinary URLs start with http, local paths need formatting
+        if (!imageUrl.startsWith('http')) {
+            // Convert Windows backslashes to forward slashes for URL consistency
+            imageUrl = imageUrl.replace(/\\/g, '/');
+            // Ensure leading slash
+            if (!imageUrl.startsWith('/')) {
+                imageUrl = '/' + imageUrl;
+            }
+        }
+        
         uploadedImageUrl = imageUrl;
         
         // Parse key to get type, color, view
-        const [type, color, view] = (key || '').split('_');
+        const [type, color, view] = key.split('_');
 
         if (!type || !color || !['front', 'back'].includes(view)) {
-            removeFileIfExists(imageUrl);
+            // Cleanup file if validation fails
+            if (!imageUrl.startsWith('http')) {
+                removeFileIfExists(imageUrl);
+            }
             return res.status(400).json({ success: false, message: 'Mockup key must use type_color_front or type_color_back format' });
         }
 
         let mockup = await Mockup.findOne({ key });
 
         if (mockup) {
-            // Delete old file if exists
-            removeFileIfExists(mockup.imageUrl);
+            // Delete old local file if exists
+            if (!mockup.imageUrl.startsWith('http')) {
+                removeFileIfExists(mockup.imageUrl);
+            }
             mockup.imageUrl = imageUrl;
             await mockup.save();
         } else {
@@ -78,7 +97,9 @@ const uploadMockup = async (req, res) => {
             data: mockup
         });
     } catch (error) {
-        removeFileIfExists(uploadedImageUrl);
+        if (uploadedImageUrl && !uploadedImageUrl.startsWith('http')) {
+            removeFileIfExists(uploadedImageUrl);
+        }
         console.error(error);
         res.status(500).json({ success: false, message: 'Server Error' });
     }
@@ -89,9 +110,11 @@ const uploadMockup = async (req, res) => {
 // @access  Private/Admin
 const deleteMockup = async (req, res) => {
     try {
-        const mockup = await Mockup.findOne({ key: req.params.key });
+        const mockup = await Mockup.findOne({ key: req.params.key.toLowerCase() });
         if (mockup) {
-            removeFileIfExists(mockup.imageUrl);
+            if (!mockup.imageUrl.startsWith('http')) {
+                removeFileIfExists(mockup.imageUrl);
+            }
             await mockup.deleteOne();
             res.json({ success: true, message: 'Mockup removed' });
         } else {

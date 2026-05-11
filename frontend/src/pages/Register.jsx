@@ -99,7 +99,7 @@ const Register = () => {
       setResendEnabled(false);
       setTimeout(() => otpInputRefs.current[0]?.focus(), 100);
     } else {
-      toast.error(result.message || 'Failed to send OTP');
+      toast.error(result.error || result.message || 'Failed to send OTP');
     }
   } catch (error) {
     console.error('Registration error:', error);
@@ -144,7 +144,7 @@ const Register = () => {
       toast.success('Registration successful!');
       navigate('/');
     } else {
-      toast.error('Invalid OTP. Please try again.');
+      toast.error(result.error || 'Invalid OTP. Please try again.');
       setOtp(['', '', '', '', '', '']);
       otpInputRefs.current[0]?.focus();
     }

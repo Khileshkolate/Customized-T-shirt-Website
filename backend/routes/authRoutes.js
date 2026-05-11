@@ -6,10 +6,12 @@ const {
     getUserProfile,
     updateUserProfile,
     sendOtp,
-    verifyOtp
+    verifyOtp,
+    getOtpHealth
 } = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
 
+router.get('/otp-health', getOtpHealth);
 router.post('/register', registerUser);
 router.post('/login', loginUser);
 router.post('/send-otp', sendOtp);

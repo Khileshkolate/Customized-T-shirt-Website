@@ -1,11 +1,34 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Otp = require('../models/Otp');
-const { sendEmailOtp, sendSmsOtp } = require('../utils/otpSender');
+const { sendEmailOtp, sendSmsOtp, getEmailOtpStatus } = require('../utils/otpSender');
 
 // Helper to generate 6-digit numeric OTP
 const generateNumericOtp = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+const normalizeContact = (contact) => {
+    if (!contact) return contact;
+    const value = String(contact).trim();
+    return value.includes('@') ? value.toLowerCase() : value.replace(/\s+/g, '');
+};
+
+const maskContact = (contact) => {
+    if (!contact) return contact;
+    if (contact.includes('@')) {
+        const [name, domain] = contact.split('@');
+        return `${name.slice(0, 2)}***@${domain}`;
+    }
+    return `${contact.slice(0, 2)}***${contact.slice(-2)}`;
+};
+
+const logOtpEvent = (event, contact, extra = {}) => {
+    console.log(`[OTP] ${event}`, {
+        contact: maskContact(contact),
+        channel: contact?.includes('@') ? 'email' : 'sms',
+        ...extra
+    });
 };
 
 // @desc    Register a new user (Creates unverified user and sends OTP)
@@ -13,7 +36,9 @@ const generateNumericOtp = () => {
 // @access  Public
 const registerUser = async (req, res) => {
     try {
-        const { name, email, password, phone } = req.body;
+        const { name, password } = req.body;
+        const email = normalizeContact(req.body.email);
+        const phone = normalizeContact(req.body.phone);
 
         const userExists = await User.findOne({ email });
         // We can optionally check if an unverified user exists and update them, 
@@ -40,7 +65,8 @@ const registerUser = async (req, res) => {
         }
 
         // Logic to send OTP
-        const contact = email; // Relying primarily on email for OTP
+        const contact = normalizeContact(email); // Relying primarily on email for OTP
+        logOtpEvent('register_requested', contact);
         const lastOtp = await Otp.findOne({ contact });
 
         if (lastOtp && (Date.now() - new Date(lastOtp.lastSentAt).getTime() < 60000)) {
@@ -65,7 +91,7 @@ const registerUser = async (req, res) => {
             : await sendSmsOtp(contact, numericOtp);
         if (!otpSent) {
             await Otp.deleteOne({ contact });
-            return res.status(502).json({ success: false, message: 'Failed to send OTP. Please try again.' });
+            return res.status(502).json({ success: false, message: 'Failed to send OTP. Check email configuration on the server.' });
         }
 
         res.status(201).json({
@@ -85,12 +111,13 @@ const registerUser = async (req, res) => {
 const sendOtp = async (req, res) => {
     try {
         const { phone, email, type } = req.body;
-        const contact = req.body.contact || phone || email;
+        const contact = normalizeContact(req.body.contact || phone || email);
 
         if (!contact) {
             return res.status(400).json({ success: false, message: 'Contact information is required' });
         }
 
+        logOtpEvent('send_requested', contact, { type });
         const lastOtp = await Otp.findOne({ contact });
 
         if (lastOtp && (Date.now() - new Date(lastOtp.lastSentAt).getTime() < 60000)) {
@@ -115,7 +142,7 @@ const sendOtp = async (req, res) => {
 
         if (!otpSent) {
             await Otp.deleteOne({ contact });
-            return res.status(502).json({ success: false, message: 'Failed to send OTP. Please try again.' });
+            return res.status(502).json({ success: false, message: 'Failed to send OTP. Check email configuration on the server.' });
         }
 
         res.status(200).json({ success: true, message: 'OTP sent successfully' });
@@ -132,13 +159,16 @@ const sendOtp = async (req, res) => {
 // @access  Public
 const verifyOtp = async (req, res) => {
     try {
-        const { phone, email, otp } = req.body;
+        const { otp } = req.body;
+        const phone = normalizeContact(req.body.phone);
+        const email = normalizeContact(req.body.email);
         const contact = phone || email;
 
         if (!contact || !otp) {
             return res.status(400).json({ success: false, message: 'Contact and OTP are required' });
         }
 
+        logOtpEvent('verify_requested', contact);
         const otpDoc = await Otp.findOne({ contact });
 
         if (!otpDoc) {
@@ -200,13 +230,15 @@ const verifyOtp = async (req, res) => {
 // @access  Public
 const loginUser = async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { password } = req.body;
+        const email = normalizeContact(req.body.email);
 
         const user = await User.findOne({ email }).select('+password');
 
         if (user && (await user.matchPassword(password))) {
             // Enforce OTP on Login as well
-            const contact = user.email; // Use email as primary contact for OTP
+            const contact = normalizeContact(user.email); // Use email as primary contact for OTP
+            logOtpEvent('login_requested', contact);
             const lastOtp = await Otp.findOne({ contact });
 
             if (lastOtp && (Date.now() - new Date(lastOtp.lastSentAt).getTime() < 60000)) {
@@ -231,7 +263,7 @@ const loginUser = async (req, res) => {
 
             if (!otpSent) {
                 await Otp.deleteOne({ contact });
-                return res.status(502).json({ success: false, message: 'Failed to send OTP. Please try again.' });
+                return res.status(502).json({ success: false, message: 'Failed to send OTP. Check email configuration on the server.' });
             }
 
             res.json({
@@ -326,6 +358,18 @@ const updateUserProfile = async (req, res) => {
     }
 };
 
+// @desc    Check OTP email configuration without exposing secrets
+// @route   GET /api/auth/otp-health
+// @access  Public
+const getOtpHealth = async (req, res) => {
+    res.json({
+        success: true,
+        data: {
+            email: getEmailOtpStatus()
+        }
+    });
+};
+
 // Generate JWT
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -339,5 +383,6 @@ module.exports = {
     getUserProfile,
     updateUserProfile,
     sendOtp,
-    verifyOtp
+    verifyOtp,
+    getOtpHealth
 };

@@ -33,8 +33,9 @@ const ProductDetails = () => {
     if (!product || !product.type) return null;
     let selectedColorHex = selectedColor || product.colors?.[0] || '#FFFFFF';
     const matchedColorObj = adminColors.find(c => c.meta?.hex?.toLowerCase() === selectedColorHex?.toLowerCase());
-    const colorName = matchedColorObj ? matchedColorObj.name : 'White';
-    const key = `${product.type}_${colorName}_front`;
+    const colorValue = matchedColorObj ? matchedColorObj.value : 'white';
+    const typeValue = product.type.toLowerCase();
+    const key = `${typeValue}_${colorValue}_front`;
     return mockups[key] || null;
   };
 
@@ -42,10 +43,11 @@ const ProductDetails = () => {
     if (!product || !product.type) return [];
     let selectedColorHex = selectedColor || product.colors?.[0] || '#FFFFFF';
     const matchedColorObj = adminColors.find(c => c.meta?.hex?.toLowerCase() === selectedColorHex?.toLowerCase());
-    const colorName = matchedColorObj ? matchedColorObj.name : 'White';
+    const colorValue = matchedColorObj ? matchedColorObj.value : 'white';
+    const typeValue = product.type.toLowerCase();
     
-    const frontKey = `${product.type}_${colorName}_front`;
-    const backKey = `${product.type}_${colorName}_back`;
+    const frontKey = `${typeValue}_${colorValue}_front`;
+    const backKey = `${typeValue}_${colorValue}_back`;
     
     const images = [];
     if (mockups[frontKey]) images.push(mockups[frontKey]);

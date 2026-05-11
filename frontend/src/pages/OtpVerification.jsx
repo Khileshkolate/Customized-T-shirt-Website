@@ -91,7 +91,7 @@ const OtpVerification = () => {
     setLoading(true)
     const result = await verifyOtp(otpString, contact)
     if (!result.success) {
-      toast.error('Invalid OTP. Please try again.')
+      toast.error(result.error || 'Invalid OTP. Please try again.')
     } else {
       toast.success('Successfully logged in!')
       if (result.data?.role === 'admin') {
