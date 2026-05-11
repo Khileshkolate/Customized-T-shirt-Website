@@ -1,6 +1,7 @@
 const nodemailer = require('nodemailer');
 const twilio = require('twilio');
 const dns = require('dns');
+const https = require('https');
 
 if (typeof dns.setDefaultResultOrder === 'function') {
     dns.setDefaultResultOrder('ipv4first');
@@ -27,9 +28,18 @@ const smtpConfig = {
     from: getEnv('SMTP_FROM', 'MAIL_FROM', 'EMAIL_FROM')
 };
 
+const emailApiConfig = {
+    provider: (getEnv('EMAIL_PROVIDER') || '').toLowerCase(),
+    brevoApiKey: getEnv('BREVO_API_KEY', 'SENDINBLUE_API_KEY'),
+    resendApiKey: getEnv('RESEND_API_KEY'),
+    from: getEnv('EMAIL_FROM', 'SMTP_FROM', 'MAIL_FROM')
+};
+
 const missingEmailConfig = [];
-if (!smtpConfig.user) missingEmailConfig.push('SMTP_USER');
-if (!smtpConfig.pass) missingEmailConfig.push('SMTP_PASS');
+const hasEmailApiProvider = Boolean(emailApiConfig.brevoApiKey || emailApiConfig.resendApiKey);
+const hasSmtpProvider = Boolean(smtpConfig.user && smtpConfig.pass);
+if (!hasEmailApiProvider && !hasSmtpProvider) missingEmailConfig.push('BREVO_API_KEY or RESEND_API_KEY or SMTP_USER/SMTP_PASS');
+if (hasEmailApiProvider && !emailApiConfig.from && !smtpConfig.from && !smtpConfig.user) missingEmailConfig.push('EMAIL_FROM');
 
 let transporter;
 let resolvedSmtpHost;
@@ -39,6 +49,183 @@ const smtpPass = smtpConfig.pass && smtpConfig.host.includes('gmail.com')
 const isSecure = smtpConfig.port === 465;
 
 const isIpv4Address = (host) => /^\d{1,3}(\.\d{1,3}){3}$/.test(host);
+
+const getEmailProvider = () => {
+    if (emailApiConfig.provider === 'brevo' && emailApiConfig.brevoApiKey) return 'brevo';
+    if (emailApiConfig.provider === 'resend' && emailApiConfig.resendApiKey) return 'resend';
+    if (emailApiConfig.brevoApiKey) return 'brevo';
+    if (emailApiConfig.resendApiKey) return 'resend';
+    return 'smtp';
+};
+
+const getFromAddress = () => (
+    emailApiConfig.from ||
+    smtpConfig.from ||
+    (smtpConfig.user ? `"ViragKala" <${smtpConfig.user}>` : undefined)
+);
+
+const parseSender = (from) => {
+    const value = String(from || '').trim();
+    const match = value.match(/^(?:"?([^"<]*)"?\s*)?<([^<>@\s]+@[^<>@\s]+)>$/);
+
+    if (match) {
+        return {
+            name: match[1]?.trim() || 'ViragKala',
+            email: match[2].trim()
+        };
+    }
+
+    return {
+        name: 'ViragKala',
+        email: value
+    };
+};
+
+const postJson = (url, headers, payload) => new Promise((resolve, reject) => {
+    const requestUrl = new URL(url);
+    const body = JSON.stringify(payload);
+
+    const req = https.request({
+        hostname: requestUrl.hostname,
+        path: `${requestUrl.pathname}${requestUrl.search}`,
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(body),
+            ...headers
+        },
+        timeout: 15000
+    }, (res) => {
+        let data = '';
+
+        res.on('data', (chunk) => {
+            data += chunk;
+        });
+
+        res.on('end', () => {
+            const ok = res.statusCode >= 200 && res.statusCode < 300;
+            resolve({
+                ok,
+                status: res.statusCode,
+                body: data
+            });
+        });
+    });
+
+    req.on('timeout', () => {
+        req.destroy(new Error('Email API request timed out'));
+    });
+
+    req.on('error', reject);
+    req.write(body);
+    req.end();
+});
+
+const buildOtpEmail = (otp) => ({
+    subject: 'Your Verification Code - ViragKala',
+    text: `Your OTP verification code is: ${otp}. It will expire in 5 minutes.`,
+    html: `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1a202c; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px;">
+            <h2 style="color: #2d3748; text-align: center; margin-bottom: 24px;">Verify Your Account</h2>
+            <p>Hello,</p>
+            <p>Your one-time password (OTP) for ViragKala is:</p>
+            <div style="background-color: #f7fafc; border-radius: 8px; padding: 16px; text-align: center; margin: 24px 0;">
+                <span style="font-size: 32px; font-weight: 800; letter-spacing: 6px; color: #3182ce;">${otp}</span>
+            </div>
+            <p>This code is valid for <strong>5 minutes</strong>. Please do not share this code with anyone.</p>
+            <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+            <p style="font-size: 12px; color: #a0aec0; text-align: center;">If you didn't request this code, you can safely ignore this email.</p>
+        </div>
+    `
+});
+
+const sendEmailViaApi = async (email, otp) => {
+    const provider = getEmailProvider();
+    const from = getFromAddress();
+    const content = buildOtpEmail(otp);
+
+    if (provider === 'smtp') {
+        return null;
+    }
+
+    if (!from) {
+        console.error('[OTP_EMAIL] EMAIL_FROM is required for API email delivery.');
+        return false;
+    }
+
+    try {
+        if (provider === 'brevo') {
+            const sender = parseSender(from);
+            const response = await postJson(
+                'https://api.brevo.com/v3/smtp/email',
+                {
+                    'api-key': emailApiConfig.brevoApiKey,
+                    accept: 'application/json'
+                },
+                {
+                    sender,
+                    to: [{ email }],
+                    subject: content.subject,
+                    htmlContent: content.html,
+                    textContent: content.text
+                }
+            );
+
+            if (!response.ok) {
+                console.error('[OTP_EMAIL] Brevo API rejected the email', {
+                    status: response.status,
+                    body: response.body
+                });
+                return false;
+            }
+
+            console.log('[OTP_EMAIL] Email sent successfully through Brevo API.', {
+                to: maskEmail(email),
+                status: response.status
+            });
+            return true;
+        }
+
+        if (provider === 'resend') {
+            const response = await postJson(
+                'https://api.resend.com/emails',
+                {
+                    Authorization: `Bearer ${emailApiConfig.resendApiKey}`
+                },
+                {
+                    from,
+                    to: [email],
+                    subject: content.subject,
+                    html: content.html,
+                    text: content.text
+                }
+            );
+
+            if (!response.ok) {
+                console.error('[OTP_EMAIL] Resend API rejected the email', {
+                    status: response.status,
+                    body: response.body
+                });
+                return false;
+            }
+
+            console.log('[OTP_EMAIL] Email sent successfully through Resend API.', {
+                to: maskEmail(email),
+                status: response.status
+            });
+            return true;
+        }
+    } catch (error) {
+        console.error('[OTP_EMAIL] Email API delivery failed', {
+            provider,
+            message: error.message,
+            code: error.code
+        });
+        return false;
+    }
+
+    return null;
+};
 
 const resolveSmtpHost = async () => {
     if (isIpv4Address(smtpConfig.host)) {
@@ -50,9 +237,9 @@ const resolveSmtpHost = async () => {
 };
 
 const getEmailTransporter = async () => {
-    if (missingEmailConfig.length > 0) {
+    if (!smtpConfig.user || !smtpConfig.pass) {
         console.warn('[OTP_EMAIL] Email delivery is not configured.', {
-            missing: missingEmailConfig,
+            missing: ['SMTP_USER', 'SMTP_PASS'].filter((name) => !process.env[name]),
             hint: 'Set SMTP_USER and SMTP_PASS in the backend environment.'
         });
         return null;
@@ -96,7 +283,12 @@ const getEmailTransporter = async () => {
     return transporter;
 };
 
-if (missingEmailConfig.length === 0) {
+if (emailApiConfig.brevoApiKey || emailApiConfig.resendApiKey) {
+    console.log('[OTP_EMAIL] Email API provider configured.', {
+        provider: getEmailProvider(),
+        from: getFromAddress() ? true : false
+    });
+} else if (smtpConfig.user && smtpConfig.pass) {
     console.log('[OTP_EMAIL] Mail transporter will be initialized on first OTP send.', {
         host: smtpConfig.host,
         port: smtpConfig.port,
@@ -118,6 +310,8 @@ const maskEmail = (email) => {
 
 const getEmailOtpStatus = () => ({
     configured: missingEmailConfig.length === 0,
+    provider: getEmailProvider(),
+    apiConfigured: Boolean(emailApiConfig.brevoApiKey || emailApiConfig.resendApiKey),
     transporterReady: Boolean(transporter),
     host: smtpConfig.host,
     resolvedHost: resolvedSmtpHost,
@@ -134,6 +328,11 @@ if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
 }
 
 const sendEmailOtp = async (email, otp) => {
+    const apiSent = await sendEmailViaApi(email, otp);
+    if (apiSent !== null) {
+        return apiSent;
+    }
+
     let emailTransporter;
     try {
         emailTransporter = await getEmailTransporter();
@@ -162,24 +361,13 @@ const sendEmailOtp = async (email, otp) => {
             port: smtpConfig.port
         });
 
+        const content = buildOtpEmail(otp);
         const info = await emailTransporter.sendMail({
-            from: smtpConfig.from || `"ViragKala" <${smtpConfig.user}>`,
+            from: getFromAddress(),
             to: email,
-            subject: 'Your Verification Code - ViragKala',
-            text: `Your OTP verification code is: ${otp}. It will expire in 5 minutes.`,
-            html: `
-                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1a202c; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px;">
-                    <h2 style="color: #2d3748; text-align: center; margin-bottom: 24px;">Verify Your Account</h2>
-                    <p>Hello,</p>
-                    <p>Your one-time password (OTP) for ViragKala is:</p>
-                    <div style="background-color: #f7fafc; border-radius: 8px; padding: 16px; text-align: center; margin: 24px 0;">
-                        <span style="font-size: 32px; font-weight: 800; letter-spacing: 6px; color: #3182ce;">${otp}</span>
-                    </div>
-                    <p>This code is valid for <strong>5 minutes</strong>. Please do not share this code with anyone.</p>
-                    <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
-                    <p style="font-size: 12px; color: #a0aec0; text-align: center;">If you didn't request this code, you can safely ignore this email.</p>
-                </div>
-            `
+            subject: content.subject,
+            text: content.text,
+            html: content.html
         });
 
         console.log('[OTP_EMAIL] Email sent successfully!', { messageId: info.messageId });

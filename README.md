@@ -69,6 +69,16 @@ Set these environment variables on the Render backend service:
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_strong_jwt_secret
 CLIENT_URL=https://your-vercel-domain.vercel.app
+EMAIL_PROVIDER=brevo
+BREVO_API_KEY=your_brevo_transactional_email_api_key
+EMAIL_FROM="ViragKala <your_verified_sender_email@example.com>"
+```
+
+Render can time out when connecting to Gmail SMTP ports. The backend therefore supports Brevo and Resend over HTTPS, which is the recommended setup for deployed OTP email.
+
+If you still want SMTP as a fallback, add:
+
+```env
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=465
 SMTP_USER=your_email@gmail.com
