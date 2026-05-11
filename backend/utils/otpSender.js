@@ -6,6 +6,8 @@ if (typeof dns.setDefaultResultOrder === 'function') {
     dns.setDefaultResultOrder('ipv4first');
 }
 
+const dnsPromises = dns.promises;
+
 const getEnv = (...names) => {
     for (const name of names) {
         const value = process.env[name];
@@ -29,29 +31,53 @@ const missingEmailConfig = [];
 if (!smtpConfig.user) missingEmailConfig.push('SMTP_USER');
 if (!smtpConfig.pass) missingEmailConfig.push('SMTP_PASS');
 
-// Transporter for Email
 let transporter;
-if (missingEmailConfig.length === 0) {
-    const smtpPass = smtpConfig.host.includes('gmail.com')
-        ? smtpConfig.pass.replace(/\s+/g, '')
-        : smtpConfig.pass;
+let resolvedSmtpHost;
+const smtpPass = smtpConfig.pass && smtpConfig.host.includes('gmail.com')
+    ? smtpConfig.pass.replace(/\s+/g, '')
+    : smtpConfig.pass;
+const isSecure = smtpConfig.port === 465;
 
-    // Use SSL for port 465, STARTTLS for 587
-    const isSecure = smtpConfig.port === 465;
+const isIpv4Address = (host) => /^\d{1,3}(\.\d{1,3}){3}$/.test(host);
+
+const resolveSmtpHost = async () => {
+    if (isIpv4Address(smtpConfig.host)) {
+        return smtpConfig.host;
+    }
+
+    const result = await dnsPromises.lookup(smtpConfig.host, { family: 4 });
+    return result.address;
+};
+
+const getEmailTransporter = async () => {
+    if (missingEmailConfig.length > 0) {
+        console.warn('[OTP_EMAIL] Email delivery is not configured.', {
+            missing: missingEmailConfig,
+            hint: 'Set SMTP_USER and SMTP_PASS in the backend environment.'
+        });
+        return null;
+    }
+
+    if (transporter) {
+        return transporter;
+    }
+
+    resolvedSmtpHost = await resolveSmtpHost();
 
     console.log('[OTP_EMAIL] Initializing Mail Transporter', {
         host: smtpConfig.host,
+        resolvedHost: resolvedSmtpHost,
         port: smtpConfig.port,
         secure: isSecure,
         user: smtpConfig.user.slice(0, 3) + '***'
     });
 
     transporter = nodemailer.createTransport({
-        host: smtpConfig.host,
+        host: resolvedSmtpHost,
+        name: smtpConfig.host,
         port: smtpConfig.port,
         secure: isSecure,
-        family: 4,
-        pool: true, // Use pooling for better performance
+        pool: true,
         maxConnections: 5,
         maxMessages: 100,
         auth: {
@@ -59,12 +85,23 @@ if (missingEmailConfig.length === 0) {
             pass: smtpPass
         },
         tls: {
-            // Do not fail on invalid certificates
+            servername: smtpConfig.host,
             rejectUnauthorized: false
         },
-        connectionTimeout: 15000, // 15 seconds
+        connectionTimeout: 15000,
         greetingTimeout: 15000,
         socketTimeout: 30000
+    });
+
+    return transporter;
+};
+
+if (missingEmailConfig.length === 0) {
+    console.log('[OTP_EMAIL] Mail transporter will be initialized on first OTP send.', {
+        host: smtpConfig.host,
+        port: smtpConfig.port,
+        secure: isSecure,
+        user: smtpConfig.user.slice(0, 3) + '***'
     });
 } else {
     console.warn('[OTP_EMAIL] Email delivery is not configured.', {
@@ -80,8 +117,10 @@ const maskEmail = (email) => {
 };
 
 const getEmailOtpStatus = () => ({
-    configured: Boolean(transporter),
+    configured: missingEmailConfig.length === 0,
+    transporterReady: Boolean(transporter),
     host: smtpConfig.host,
+    resolvedHost: resolvedSmtpHost,
     port: smtpConfig.port,
     user: maskEmail(smtpConfig.user),
     from: smtpConfig.from ? smtpConfig.from.replace(smtpConfig.user || '', maskEmail(smtpConfig.user) || '') : undefined,
@@ -95,7 +134,19 @@ if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
 }
 
 const sendEmailOtp = async (email, otp) => {
-    if (!transporter) {
+    let emailTransporter;
+    try {
+        emailTransporter = await getEmailTransporter();
+    } catch (error) {
+        console.error('[OTP_EMAIL] Failed to initialize email transporter', {
+            host: smtpConfig.host,
+            message: error.message,
+            code: error.code
+        });
+        return false;
+    }
+
+    if (!emailTransporter) {
         console.error('[OTP_EMAIL] Cannot send OTP because email delivery is not configured.', {
             to: maskEmail(email),
             missing: missingEmailConfig
@@ -107,10 +158,11 @@ const sendEmailOtp = async (email, otp) => {
         console.log('[OTP_EMAIL] Attempting to send real email...', {
             to: maskEmail(email),
             host: smtpConfig.host,
+            resolvedHost: resolvedSmtpHost,
             port: smtpConfig.port
         });
 
-        const info = await transporter.sendMail({
+        const info = await emailTransporter.sendMail({
             from: smtpConfig.from || `"ViragKala" <${smtpConfig.user}>`,
             to: email,
             subject: 'Your Verification Code - ViragKala',
