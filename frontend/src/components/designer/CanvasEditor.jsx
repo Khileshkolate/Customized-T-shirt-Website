@@ -182,9 +182,6 @@ const CanvasEditor = () => {
                       <p className="text-sm text-gray-500 font-bold leading-relaxed tracking-wide">
                           No mockup image for <br/> {shirtType} — {shirtColor} — {(printZone||'Front').toUpperCase()}
                       </p>
-                      <a href="/admin" className="text-primary-600 font-bold text-xs mt-3 hover:underline pointer-events-auto bg-primary-50 px-4 py-2 rounded-full border border-primary-100">
-                          Go to Admin Panel to upload
-                      </a>
                   </div>
               )}
 

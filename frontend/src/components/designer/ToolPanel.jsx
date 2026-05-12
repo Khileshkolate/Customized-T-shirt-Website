@@ -5,6 +5,8 @@ import toast from 'react-hot-toast';
 
 import useAdminStore from '../../store/adminStore';
 
+const normalizeOption = (value) => String(value || '').trim().toLowerCase();
+
 const ToolPanel = () => {
   const { 
       shirtTypes, colors, fetchAttributes,
@@ -64,7 +66,7 @@ const ToolPanel = () => {
               <button 
                 key={type._id}
                 onClick={() => setShirtType(type.value)}
-                className={`flex-1 min-w-[70px] aspect-square rounded-xl border flex flex-col items-center justify-center gap-1 transition-all shadow-sm ${shirtType === type.value ? 'border-primary-500 text-primary-700 bg-primary-50 ring-1 ring-primary-500' : 'border-gray-200 text-gray-500 hover:border-primary-500 hover:bg-primary-50 hover:text-primary-700 bg-white'}`}
+                className={`flex-1 min-w-[70px] aspect-square rounded-xl border flex flex-col items-center justify-center gap-1 transition-all shadow-sm ${normalizeOption(shirtType) === normalizeOption(type.value) ? 'border-primary-500 text-primary-700 bg-primary-50 ring-1 ring-primary-500' : 'border-gray-200 text-gray-500 hover:border-primary-500 hover:bg-primary-50 hover:text-primary-700 bg-white'}`}
               >
                   <span className="text-xl">{type.meta?.icon || '👕'}</span>
                   <span className="text-[10px] font-bold">{type.name}</span>
@@ -81,11 +83,11 @@ const ToolPanel = () => {
              <div key={c._id} className="relative">
                 <button
                   onClick={() => setShirtColor(c.value, c.meta?.hex)}
-                  className={`w-7 h-7 rounded-full shadow-sm transition-transform border border-gray-300 ${shirtColor === c.value ? 'ring-2 ring-primary-500 ring-offset-2 scale-110' : 'hover:scale-110'}`}
+                  className={`w-7 h-7 rounded-full shadow-sm transition-transform border border-gray-300 ${normalizeOption(shirtColor) === normalizeOption(c.value) ? 'ring-2 ring-primary-500 ring-offset-2 scale-110' : 'hover:scale-110'}`}
                   style={{ backgroundColor: c.meta?.hex }}
                   title={c.name}
                 />
-                {shirtColor === c.name && (
+                {normalizeOption(shirtColor) === normalizeOption(c.value) && (
                     <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary-500 rounded-full border-2 border-white" />
                 )}
              </div>

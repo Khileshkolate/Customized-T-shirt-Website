@@ -14,6 +14,30 @@ const resolveAssetUrl = (url) => {
   return `${BASE_URL}${cleanUrl}`;
 };
 
+const normalizeMockupPart = (value) => {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+};
+
+const normalizeLoosePart = (value) => {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ');
+};
+
+const buildMockupKey = (type, color, view) => {
+  return `${normalizeMockupPart(type)}_${normalizeMockupPart(color)}_${normalizeMockupPart(view)}`;
+};
+
+const getLegacyKey = (type, color, view) => {
+  return `${normalizeLoosePart(type)}_${normalizeLoosePart(color)}_${normalizeLoosePart(view)}`;
+};
+
 const useAdminStore = create((set, get) => ({
   mockups: {},
   shirtTypes: [],
@@ -69,8 +93,17 @@ const useAdminStore = create((set, get) => ({
       const formattedMockups = {};
 
       mockupsData.forEach(m => {
-        const key = m.key;
-        formattedMockups[key] = resolveAssetUrl(m.imageUrl);
+        const imageUrl = resolveAssetUrl(m.imageUrl);
+        const rawKey = String(m.key || '').toLowerCase();
+
+        if (rawKey) {
+          formattedMockups[rawKey] = imageUrl;
+        }
+
+        if (m.type && m.color && m.view) {
+          formattedMockups[buildMockupKey(m.type, m.color, m.view)] = imageUrl;
+          formattedMockups[getLegacyKey(m.type, m.color, m.view)] = imageUrl;
+        }
       });
 
       set({ mockups: formattedMockups, loading: false });
@@ -85,7 +118,7 @@ const useAdminStore = create((set, get) => ({
   // `key` is in format "type_color_view" (slugs)
   uploadMockup: async (key, file) => {
     const toastId = toast.loading('Uploading Mockup...');
-    const normalizedKey = key.toLowerCase();
+    const normalizedKey = String(key).toLowerCase();
 
     try {
       const formData = new FormData();
@@ -106,10 +139,14 @@ const useAdminStore = create((set, get) => ({
   removeMockup: async (key) => {
     try {
         const { deleteMockup } = await import('../api/adminApi');
-        await deleteMockup(key.toLowerCase());
+        const [type, color, view] = String(key).split('_');
+        const deleteKey = String(key).toLowerCase();
+        await deleteMockup(deleteKey);
         set((state) => {
             const newMockups = { ...state.mockups };
-            delete newMockups[key.toLowerCase()];
+            delete newMockups[deleteKey];
+            delete newMockups[buildMockupKey(type, color, view)];
+            delete newMockups[getLegacyKey(type, color, view)];
             return { mockups: newMockups };
         });
         toast.success('Mockup Removed');
@@ -121,8 +158,10 @@ const useAdminStore = create((set, get) => ({
 
   getMockup: (typeValue, colorValue, view) => {
     if (!typeValue || !colorValue || !view) return null;
-    const key = `${typeValue.toLowerCase()}_${colorValue.toLowerCase()}_${view.toLowerCase()}`;
-    return get().mockups[key] || null;
+    const mockups = get().mockups;
+    const normalizedKey = buildMockupKey(typeValue, colorValue, view);
+    const legacyKey = getLegacyKey(typeValue, colorValue, view);
+    return mockups[normalizedKey] || mockups[legacyKey] || null;
   }
 }));
 

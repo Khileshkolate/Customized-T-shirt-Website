@@ -121,10 +121,6 @@ const Login = () => {
                   Create account
                 </Link>
               </p>
-              <p className="text-sm text-gray-500 mt-2">
-                For testing, use admin credentials: admin@viragkala.com / password123
-              </p>
-
             </div>
           </div>
         </div>
