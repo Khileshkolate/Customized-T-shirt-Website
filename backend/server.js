@@ -45,6 +45,7 @@ app.use('/api/designs', require('./routes/designRoutes'));
 app.use('/api/mockups', require('./routes/mockupRoutes'));
 app.use('/api/attributes', require('./routes/attributeRoutes'));
 app.use('/api/payment', require('./routes/paymentRoutes'));
+app.use('/api/stats', require('./routes/statsRoutes'));
 
 // Serve static files
 app.use('/uploads', express.static('uploads'));

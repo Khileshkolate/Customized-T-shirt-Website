@@ -24,14 +24,31 @@ import {
   Headphones
 } from 'lucide-react'
 import useAdminStore from '../store/adminStore'
+import axios from '../utils/axiosInstance'
 
 const Home = () => {
   const [loading, setLoading] = useState(false)
+  const [siteStats, setSiteStats] = useState(null)
   const { mockups, fetchMockups, colors: adminColors, fetchAttributes } = useAdminStore()
   
   useEffect(() => {
     if (Object.keys(mockups).length === 0) fetchMockups()
     if (adminColors.length === 0) fetchAttributes()
+  }, [])
+
+  useEffect(() => {
+    const fetchSiteStats = async () => {
+      try {
+        const response = await axios.get('/stats/public')
+        setSiteStats(response.data.data)
+      } catch (error) {
+        console.error('Error fetching public stats:', error)
+      }
+    }
+
+    fetchSiteStats()
+    const interval = setInterval(fetchSiteStats, 30000)
+    return () => clearInterval(interval)
   }, [])
 
   const getProductImage = (product) => {
@@ -116,10 +133,10 @@ const Home = () => {
   ])
 
   const stats = [
-    { icon: <Users className="h-6 w-6" />, value: '10,000+', label: 'Happy Customers' },
-    { icon: <ShoppingBag className="h-6 w-6" />, value: '50,000+', label: 'Products Sold' },
-    { icon: <Star className="h-6 w-6" />, value: '4.8/5', label: 'Customer Rating' },
-    { icon: <Truck className="h-6 w-6" />, value: '24-48', label: 'Hour Delivery' }
+    { icon: <Users className="h-6 w-6" />, value: siteStats?.tiles?.customers || '0', label: 'Happy Customers' },
+    { icon: <ShoppingBag className="h-6 w-6" />, value: siteStats?.tiles?.productsSold || '0', label: 'Products Sold' },
+    { icon: <Star className="h-6 w-6" />, value: siteStats?.tiles?.averageRating || '0/5', label: 'Customer Rating' },
+    { icon: <Truck className="h-6 w-6" />, value: siteStats?.tiles?.deliveryHours || '24-48', label: 'Hour Delivery' }
   ]
 
   const features = [
@@ -231,7 +248,7 @@ const Home = () => {
           <div className="absolute right-1/4 bottom-1/4 w-96 h-96 bg-secondary-400/20 rounded-full blur-3xl" />
         </div>
         
-        <div className="relative container mx-auto px-4 pt-10 pb-24 md:pt-16 md:pb-32">
+        <div className="relative container mx-auto px-4 pt-8 pb-8 md:pt-12 md:pb-10">
           <div className="max-w-3xl">
 
             
@@ -244,7 +261,7 @@ const Home = () => {
               Create unique products that tell your story.
             </p>
             
-            <div className="flex flex-wrap gap-4 mb-12">
+            <div className="flex flex-wrap gap-4 mb-8">
               <Link
                 to="/designer"
                 className="group inline-flex items-center gap-2 bg-white text-primary-700 px-8 py-4 rounded-full font-semibold hover:bg-gray-100 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-2xl"
@@ -282,24 +299,24 @@ const Home = () => {
                     <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                   ))}
                 </div>
-                <p className="text-gray-300">Trusted by 10,000+ creators</p>
+                <p className="text-gray-300">Trusted by {siteStats?.tiles?.customers || '0'} creators</p>
               </div>
             </div>
           </div>
         </div>
         
         {/* Stats */}
-        <div className="relative container mx-auto px-4 pb-24">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="relative container mx-auto px-4 pb-12">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5">
             {stats.map((stat, index) => (
               <div
                 key={index}
-                className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-center hover:bg-white/20 transition-all duration-300 hover:scale-105"
+                className="bg-white/10 backdrop-blur-sm rounded-xl p-4 md:p-5 text-center hover:bg-white/20 transition-all duration-300 hover:scale-105"
               >
-                <div className="inline-flex items-center justify-center w-12 h-12 bg-white/20 rounded-full mb-3">
+                <div className="inline-flex items-center justify-center w-10 h-10 bg-white/20 rounded-full mb-3">
                   {stat.icon}
                 </div>
-                <div className="text-3xl font-bold mb-1 animate-countup">{stat.value}</div>
+                <div className="text-2xl md:text-3xl font-bold mb-1 animate-countup">{stat.value}</div>
                 <div className="text-sm text-gray-200">{stat.label}</div>
               </div>
             ))}

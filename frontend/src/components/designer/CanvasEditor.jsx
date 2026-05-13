@@ -10,6 +10,7 @@ const CanvasEditor = () => {
   const fetchMockups = useAdminStore(state => state.fetchMockups);
   
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [mockupLoadFailed, setMockupLoadFailed] = useState(false);
 
   // Auto scale canvas based on window width on mobile
   useEffect(() => {
@@ -48,6 +49,11 @@ const CanvasEditor = () => {
   };
   
   const customImg = getSimulatedImage();
+  const hasVisibleMockup = Boolean(customImg && !mockupLoadFailed);
+
+  useEffect(() => {
+    setMockupLoadFailed(false);
+  }, [customImg]);
 
   useEffect(() => {
     const canvas = new fabric.Canvas(canvasRef.current, {
@@ -172,7 +178,7 @@ const CanvasEditor = () => {
           <div className="relative w-[480px] h-[520px] rounded-xl flex flex-col items-center justify-center overflow-visible group">
               
               {/* Fallback Placeholder if no mockup found */}
-              {!customImg && (
+              {!hasVisibleMockup && (
                   <div className="absolute inset-0 z-0 pointer-events-none flex flex-col items-center justify-center text-center p-6 bg-white/60 backdrop-blur-sm border-2 border-dashed border-gray-300 shadow-xl rounded-xl">
                       <div className="w-20 h-20 bg-current mb-4 rounded opacity-80 flex items-center justify-center shadow-inner" style={{ color: getSimulatedColor(), backgroundColor: getSimulatedColor() }}>
                           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={`${shirtColor === 'White' || shirtColor === 'Off White' ? 'text-gray-400' : 'text-white'}`}>
@@ -183,6 +189,17 @@ const CanvasEditor = () => {
                           No mockup image for <br/> {shirtType} — {shirtColor} — {(printZone||'Front').toUpperCase()}
                       </p>
                   </div>
+              )}
+
+              {hasVisibleMockup && (
+                  <img
+                    key={customImg}
+                    src={customImg}
+                    alt={`${shirtType} ${shirtColor} ${printZone} mockup`}
+                    className="absolute inset-0 z-10 w-full h-full object-contain pointer-events-none drop-shadow-2xl"
+                    onLoad={() => setMockupLoadFailed(false)}
+                    onError={() => setMockupLoadFailed(true)}
+                  />
               )}
 
               {/* The Actual Interactive Canvas */}
