@@ -313,23 +313,11 @@ const verifyOtp = async (req, res) => {
             return sendAuthResponse(res, user, 201);
         }
 
-        // OTP is valid. Now log the user in via email or phone.
-        const user = await User.findOne(phone ? { phone } : { email }).select('+password');
-
-        if (!user) {
-            await Otp.deleteOne({ _id: otpDoc._id });
-            return res.status(404).json({ success: false, message: 'User not found for this contact' });
-        }
-
-        // Mark user as verified
-        if (!user.isVerified) {
-            user.isVerified = true;
-            await user.save();
-        }
-
         await Otp.deleteOne({ _id: otpDoc._id });
-
-        sendAuthResponse(res, user);
+        return res.status(400).json({
+            success: false,
+            message: 'OTP verification is only required during signup.'
+        });
 
     } catch (error) {
         console.error(error);
@@ -337,7 +325,7 @@ const verifyOtp = async (req, res) => {
     }
 };
 
-// @desc    Auth user & get token (Standard Login)
+// @desc    Auth user & get token
 // @route   POST /api/auth/login
 // @access  Public
 const loginUser = async (req, res) => {
@@ -347,47 +335,18 @@ const loginUser = async (req, res) => {
 
         const user = await User.findOne({ email }).select('+password');
 
-        if (user && (await user.matchPassword(password))) {
-            // Enforce OTP on Login as well
-            const contact = normalizeContact(user.email); // Use email as primary contact for OTP
-            logOtpEvent('login_requested', contact);
-            const lastOtp = await Otp.findOne({ contact, purpose: 'login' });
-
-            if (lastOtp && (Date.now() - new Date(lastOtp.lastSentAt).getTime() < 60000)) {
-                return res.status(429).json({ success: false, message: 'Please wait 60 seconds before requesting a new OTP' });
-            }
-
-            if (lastOtp) {
-                await Otp.deleteOne({ _id: lastOtp._id });
-            }
-
-            const numericOtp = generateNumericOtp();
-
-            await Otp.create({
-                contact,
-                purpose: 'login',
-                otp: numericOtp,
-                expiresAt: new Date(Date.now() + 5 * 60000)
-            });
-
-            const otpSent = contact.includes('@')
-                ? await sendEmailOtp(contact, numericOtp)
-                : await sendSmsOtp(contact, numericOtp);
-
-            if (!otpSent) {
-                await Otp.deleteOne({ contact });
-                return res.status(502).json({ success: false, message: 'Failed to send OTP. Check email configuration on the server.' });
-            }
-
-            res.json({
-                success: true,
-                message: 'OTP sent for login',
-                requireOtp: true,
-                contact: contact // Pass the contact so frontend knows where it was sent
-            });
-        } else {
-            res.status(401).json({ success: false, message: 'Invalid email or password' });
+        if (!user || !(await user.matchPassword(password))) {
+            return res.status(401).json({ success: false, message: 'Invalid email or password' });
         }
+
+        if (!user.isVerified) {
+            return res.status(403).json({
+                success: false,
+                message: 'Please complete signup verification before logging in.'
+            });
+        }
+
+        sendAuthResponse(res, user);
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: 'Server Error', error: error.message });
