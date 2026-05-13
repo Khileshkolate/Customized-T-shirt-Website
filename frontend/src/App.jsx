@@ -22,6 +22,7 @@ import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Profile from './pages/Profile';
+import Settings from './pages/Settings';
 import Products from './pages/Products';
 import ProductDetails from './pages/ProductDetails';
 import DesignStudio from './pages/DesignStudio';
@@ -72,6 +73,7 @@ const AppContent = () => {
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<Profile />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="/design" element={<Navigate to="/designer" replace />} />
             <Route path="/design/:productId" element={<DesignRedirect />} />
             <Route path="/designs" element={<MyDesigns />} />

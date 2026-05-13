@@ -52,13 +52,43 @@ const sendAuthResponse = (res, user, statusCode = 200) => {
     });
 };
 
-const getClientUrl = () => {
-    const rawUrl = process.env.RESET_PASSWORD_BASE_URL || process.env.CLIENT_URL || process.env.FRONTEND_URL || process.env.VITE_APP_URL || process.env.VERCEL_URL;
-    if (!rawUrl) return 'http://localhost:5173';
+const normalizeBaseUrl = (url) => {
+    if (!url) return null;
 
-    const firstUrl = String(rawUrl).split(',')[0].trim().replace(/\/+$/, '');
-    if (/^https?:\/\//i.test(firstUrl)) return firstUrl;
-    return `https://${firstUrl}`;
+    const firstUrl = String(url).split(',')[0].trim().replace(/\/+$/, '');
+    if (!firstUrl || firstUrl.includes('your-vercel-domain')) return null;
+
+    const withProtocol = /^https?:\/\//i.test(firstUrl) ? firstUrl : `https://${firstUrl}`;
+
+    try {
+        return new URL(withProtocol).origin;
+    } catch {
+        return null;
+    }
+};
+
+const getClientUrl = (req) => {
+    const explicitResetUrl = normalizeBaseUrl(process.env.RESET_PASSWORD_BASE_URL);
+    if (explicitResetUrl) return explicitResetUrl;
+
+    const requestedOrigin = normalizeBaseUrl(req.body?.clientOrigin || req.get('origin'));
+    if (requestedOrigin) return requestedOrigin;
+
+    const referer = req.get('referer');
+    if (referer) {
+        const refererOrigin = normalizeBaseUrl(referer);
+        if (refererOrigin) return refererOrigin;
+    }
+
+    const envUrl = [
+        process.env.CLIENT_URL,
+        process.env.FRONTEND_URL,
+        process.env.VITE_APP_URL,
+        process.env.VERCEL_URL
+    ].map(normalizeBaseUrl).find(Boolean);
+    if (envUrl) return envUrl;
+
+    return 'http://localhost:5173';
 };
 
 const hashResetToken = (token) => (
@@ -464,7 +494,7 @@ const forgotPassword = async (req, res) => {
         user.resetPasswordExpires = Date.now() + 30 * 60 * 1000;
         await user.save({ validateBeforeSave: false });
 
-        const resetUrl = `${getClientUrl()}/reset-password/${resetToken}`;
+        const resetUrl = `${getClientUrl(req)}/reset-password/${resetToken}`;
         const emailSent = await sendPasswordResetEmail(user.email, resetUrl);
 
         if (!emailSent) {

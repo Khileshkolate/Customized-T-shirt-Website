@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   User, Mail, Smartphone, MapPin, Edit2, Save, X,
-  Package, CreditCard, Heart, Settings, LogOut, Palette
+  Package, CreditCard, Heart, Settings, LogOut, Palette, KeyRound
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import axios from '../utils/axiosInstance';
@@ -19,6 +19,7 @@ const Profile = () => {
   });
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -57,6 +58,26 @@ const Profile = () => {
   const handleLogout = () => {
     logout();
     window.location.href = '/';
+  };
+
+  const handlePasswordReset = async () => {
+    if (!user?.email) {
+      toast.error('No email found for this account');
+      return;
+    }
+
+    setResetLoading(true);
+    try {
+      const response = await axios.post('/auth/forgot-password', {
+        email: user.email,
+        clientOrigin: window.location.origin
+      });
+      toast.success(response.data.message || 'Password reset link sent');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to send reset link');
+    } finally {
+      setResetLoading(false);
+    }
   };
 
   if (!user) {
@@ -110,13 +131,13 @@ const Profile = () => {
                   <CreditCard className="h-5 w-5" />
                   Payment Methods
                 </button>
-                <button 
-                  onClick={() => toast.success('Settings coming soon!')}
+                <Link 
+                  to="/settings"
                   className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <Settings className="h-5 w-5" />
                   Settings
-                </button>
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors mt-6"
@@ -222,6 +243,29 @@ const Profile = () => {
                   </div>
                 )}
               </form>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-xl bg-primary-50 text-primary-700 flex items-center justify-center">
+                    <KeyRound className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Password & Security</h3>
+                    <p className="text-gray-600 text-sm">Send a secure reset link to {user.email}.</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handlePasswordReset}
+                  disabled={resetLoading}
+                  className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 disabled:opacity-50"
+                >
+                  <Mail className="h-4 w-4" />
+                  {resetLoading ? 'Sending...' : 'Email Reset Link'}
+                </button>
+              </div>
             </div>
 
             {/* Recent Orders */}

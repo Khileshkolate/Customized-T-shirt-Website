@@ -21,7 +21,8 @@ const ForgotPassword = () => {
     setLoading(true);
     try {
       const response = await axios.post('/auth/forgot-password', {
-        email: email.trim().toLowerCase()
+        email: email.trim().toLowerCase(),
+        clientOrigin: window.location.origin
       });
       setSent(true);
       toast.success(response.data.message || 'Reset link sent');
