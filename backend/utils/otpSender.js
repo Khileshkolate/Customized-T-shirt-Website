@@ -139,10 +139,28 @@ const buildOtpEmail = (otp) => ({
     `
 });
 
-const sendEmailViaApi = async (email, otp) => {
+const buildPasswordResetEmail = (resetUrl) => ({
+    subject: 'Reset Your ViragKala Password',
+    text: `Reset your ViragKala password using this link: ${resetUrl}. This link expires in 30 minutes. If you did not request it, ignore this email.`,
+    html: `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1a202c; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px;">
+            <h2 style="color: #2d3748; text-align: center; margin-bottom: 24px;">Reset Your Password</h2>
+            <p>Hello,</p>
+            <p>We received a request to reset your ViragKala password.</p>
+            <p style="text-align: center; margin: 28px 0;">
+                <a href="${resetUrl}" style="display: inline-block; background: #2f7d46; color: #ffffff; text-decoration: none; font-weight: 700; padding: 14px 22px; border-radius: 8px;">Reset Password</a>
+            </p>
+            <p>This link is valid for <strong>30 minutes</strong>. If the button does not work, copy and paste this URL into your browser:</p>
+            <p style="word-break: break-all; color: #2f7d46;">${resetUrl}</p>
+            <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+            <p style="font-size: 12px; color: #a0aec0; text-align: center;">If you didn't request this reset, you can safely ignore this email.</p>
+        </div>
+    `
+});
+
+const sendEmailViaApi = async (email, content) => {
     const provider = getEmailProvider();
     const from = getFromAddress();
-    const content = buildOtpEmail(otp);
 
     if (provider === 'smtp') {
         return null;
@@ -327,8 +345,8 @@ if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
     twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 }
 
-const sendEmailOtp = async (email, otp) => {
-    const apiSent = await sendEmailViaApi(email, otp);
+const sendEmailContent = async (email, content, logLabel) => {
+    const apiSent = await sendEmailViaApi(email, content);
     if (apiSent !== null) {
         return apiSent;
     }
@@ -346,7 +364,8 @@ const sendEmailOtp = async (email, otp) => {
     }
 
     if (!emailTransporter) {
-        console.error('[OTP_EMAIL] Cannot send OTP because email delivery is not configured.', {
+        console.error('[OTP_EMAIL] Cannot send email because email delivery is not configured.', {
+            kind: logLabel,
             to: maskEmail(email),
             missing: missingEmailConfig
         });
@@ -355,13 +374,13 @@ const sendEmailOtp = async (email, otp) => {
 
     try {
         console.log('[OTP_EMAIL] Attempting to send real email...', {
+            kind: logLabel,
             to: maskEmail(email),
             host: smtpConfig.host,
             resolvedHost: resolvedSmtpHost,
             port: smtpConfig.port
         });
 
-        const content = buildOtpEmail(otp);
         const info = await emailTransporter.sendMail({
             from: getFromAddress(),
             to: email,
@@ -383,6 +402,14 @@ const sendEmailOtp = async (email, otp) => {
         return false;
     }
 };
+
+const sendEmailOtp = async (email, otp) => (
+    sendEmailContent(email, buildOtpEmail(otp), 'otp')
+);
+
+const sendPasswordResetEmail = async (email, resetUrl) => (
+    sendEmailContent(email, buildPasswordResetEmail(resetUrl), 'password_reset')
+);
 
 const sendSmsOtp = async (phone, otp) => {
     if (!twilioClient) {
@@ -406,6 +433,7 @@ const sendSmsOtp = async (phone, otp) => {
 
 module.exports = {
     sendEmailOtp,
+    sendPasswordResetEmail,
     sendSmsOtp,
     getEmailOtpStatus
 };

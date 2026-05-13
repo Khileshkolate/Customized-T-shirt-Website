@@ -1,7 +1,9 @@
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Otp = require('../models/Otp');
-const { sendEmailOtp, sendSmsOtp, getEmailOtpStatus } = require('../utils/otpSender');
+const { sendEmailOtp, sendPasswordResetEmail, sendSmsOtp, getEmailOtpStatus } = require('../utils/otpSender');
 
 // Helper to generate 6-digit numeric OTP
 const generateNumericOtp = () => {
@@ -31,43 +33,87 @@ const logOtpEvent = (event, contact, extra = {}) => {
     });
 };
 
-// @desc    Register a new user (Creates unverified user and sends OTP)
+const buildUserPayload = (user) => ({
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    phone: user.phone,
+    isVerified: user.isVerified
+});
+
+const sendAuthResponse = (res, user, statusCode = 200) => {
+    res.status(statusCode).json({
+        success: true,
+        data: {
+            user: buildUserPayload(user),
+            token: generateToken(user._id)
+        }
+    });
+};
+
+const getClientUrl = () => {
+    const rawUrl = process.env.RESET_PASSWORD_BASE_URL || process.env.CLIENT_URL || process.env.FRONTEND_URL || process.env.VITE_APP_URL || process.env.VERCEL_URL;
+    if (!rawUrl) return 'http://localhost:5173';
+
+    const firstUrl = String(rawUrl).split(',')[0].trim().replace(/\/+$/, '');
+    if (/^https?:\/\//i.test(firstUrl)) return firstUrl;
+    return `https://${firstUrl}`;
+};
+
+const hashResetToken = (token) => (
+    crypto.createHash('sha256').update(token).digest('hex')
+);
+
+const isValidEmail = (email) => /^\S+@\S+\.\S+$/.test(email);
+
+// @desc    Register a new user after email OTP verification
 // @route   POST /api/auth/register
 // @access  Public
 const registerUser = async (req, res) => {
     try {
-        const { name, password } = req.body;
+        const name = String(req.body.name || '').trim();
+        const password = String(req.body.password || '');
         const email = normalizeContact(req.body.email);
         const phone = normalizeContact(req.body.phone);
 
-        const userExists = await User.findOne({ email });
-        // We can optionally check if an unverified user exists and update them, 
-        // but for now we'll just reject if email is taken.
-        if (userExists && userExists.isVerified) {
+        if (!name || !email || !phone || !password) {
+            return res.status(400).json({ success: false, message: 'Name, email, phone, and password are required' });
+        }
+
+        if (!isValidEmail(email)) {
+            return res.status(400).json({ success: false, message: 'Please add a valid email' });
+        }
+
+        if (phone.length !== 10) {
+            return res.status(400).json({ success: false, message: 'Please add a valid 10-digit phone number' });
+        }
+
+        if (password.length < 8) {
+            return res.status(400).json({ success: false, message: 'Password must be at least 8 characters long' });
+        }
+
+        const existingEmailUser = await User.findOne({ email });
+        if (existingEmailUser?.isVerified) {
             return res.status(400).json({ success: false, message: 'User already exists' });
         }
 
-        let user = userExists;
-        if (!userExists) {
-            user = await User.create({
-                name,
-                email,
-                password,
-                phone,
-                isVerified: false
-            });
-        } else {
-            user.name = name;
-            user.password = password;
-            user.phone = phone;
-            user.isVerified = false;
-            await user.save();
+        const existingPhoneUser = await User.findOne({ phone });
+        if (existingPhoneUser?.isVerified && existingPhoneUser.email !== email) {
+            return res.status(400).json({ success: false, message: 'Phone number is already registered' });
         }
 
-        // Logic to send OTP
-        const contact = normalizeContact(email); // Relying primarily on email for OTP
+        if (existingEmailUser && !existingEmailUser.isVerified) {
+            await User.deleteOne({ _id: existingEmailUser._id });
+        }
+
+        if (existingPhoneUser && !existingPhoneUser.isVerified && existingPhoneUser.email !== email) {
+            await User.deleteOne({ _id: existingPhoneUser._id });
+        }
+
+        const contact = email;
         logOtpEvent('register_requested', contact);
-        const lastOtp = await Otp.findOne({ contact });
+        const lastOtp = await Otp.findOne({ contact, purpose: 'register' });
 
         if (lastOtp && (Date.now() - new Date(lastOtp.lastSentAt).getTime() < 60000)) {
             return res.status(429).json({ success: false, message: 'Please wait 60 seconds before requesting a new OTP' });
@@ -78,19 +124,24 @@ const registerUser = async (req, res) => {
         }
 
         const numericOtp = generateNumericOtp();
+        const passwordHash = await bcrypt.hash(password, await bcrypt.genSalt(10));
 
         await Otp.create({
             contact,
+            purpose: 'register',
             otp: numericOtp,
-            expiresAt: new Date(Date.now() + 5 * 60000) // 5 minutes
+            pendingUser: {
+                name,
+                email,
+                phone,
+                passwordHash
+            },
+            expiresAt: new Date(Date.now() + 5 * 60000)
         });
 
-        // Try sending OTP
-        const otpSent = contact.includes('@')
-            ? await sendEmailOtp(contact, numericOtp)
-            : await sendSmsOtp(contact, numericOtp);
+        const otpSent = await sendEmailOtp(contact, numericOtp);
         if (!otpSent) {
-            await Otp.deleteOne({ contact });
+            await Otp.deleteOne({ contact, purpose: 'register' });
             return res.status(502).json({ success: false, message: 'Failed to send OTP. Check email configuration on the server.' });
         }
 
@@ -118,7 +169,7 @@ const sendOtp = async (req, res) => {
         }
 
         logOtpEvent('send_requested', contact, { type });
-        const lastOtp = await Otp.findOne({ contact });
+        const lastOtp = await Otp.findOne({ contact }).sort({ createdAt: -1 });
 
         if (lastOtp && (Date.now() - new Date(lastOtp.lastSentAt).getTime() < 60000)) {
             return res.status(429).json({ success: false, message: 'Please wait 60 seconds before requesting a new OTP' });
@@ -132,6 +183,7 @@ const sendOtp = async (req, res) => {
 
         await Otp.create({
             contact,
+            purpose: 'generic',
             otp: numericOtp,
             expiresAt: new Date(Date.now() + 5 * 60000)
         });
@@ -169,7 +221,7 @@ const verifyOtp = async (req, res) => {
         }
 
         logOtpEvent('verify_requested', contact);
-        const otpDoc = await Otp.findOne({ contact });
+        const otpDoc = await Otp.findOne({ contact }).sort({ createdAt: -1 });
 
         if (!otpDoc) {
             return res.status(400).json({ success: false, message: 'OTP expired or not found' });
@@ -188,6 +240,49 @@ const verifyOtp = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Invalid OTP' });
         }
 
+        if (otpDoc.purpose === 'register') {
+            const pendingUser = otpDoc.pendingUser || {};
+
+            if (!pendingUser.name || !pendingUser.email || !pendingUser.phone || !pendingUser.passwordHash) {
+                await Otp.deleteOne({ _id: otpDoc._id });
+                return res.status(400).json({ success: false, message: 'Registration session expired. Please register again.' });
+            }
+
+            const existingEmailUser = await User.findOne({ email: pendingUser.email });
+            if (existingEmailUser?.isVerified) {
+                await Otp.deleteOne({ _id: otpDoc._id });
+                return res.status(400).json({ success: false, message: 'User already exists' });
+            }
+
+            const existingPhoneUser = await User.findOne({ phone: pendingUser.phone });
+            if (existingPhoneUser?.isVerified && existingPhoneUser.email !== pendingUser.email) {
+                await Otp.deleteOne({ _id: otpDoc._id });
+                return res.status(400).json({ success: false, message: 'Phone number is already registered' });
+            }
+
+            if (existingEmailUser && !existingEmailUser.isVerified) {
+                await User.deleteOne({ _id: existingEmailUser._id });
+            }
+
+            if (existingPhoneUser && !existingPhoneUser.isVerified && existingPhoneUser.email !== pendingUser.email) {
+                await User.deleteOne({ _id: existingPhoneUser._id });
+            }
+
+            const user = new User({
+                name: pendingUser.name,
+                email: pendingUser.email,
+                phone: pendingUser.phone,
+                password: pendingUser.passwordHash,
+                isVerified: true
+            });
+            user.$locals.skipPasswordHash = true;
+            await user.save();
+
+            await Otp.deleteMany({ contact: pendingUser.email, purpose: 'register' });
+
+            return sendAuthResponse(res, user, 201);
+        }
+
         // OTP is valid. Now log the user in via email or phone.
         const user = await User.findOne(phone ? { phone } : { email }).select('+password');
 
@@ -204,20 +299,7 @@ const verifyOtp = async (req, res) => {
 
         await Otp.deleteOne({ _id: otpDoc._id });
 
-        res.json({
-            success: true,
-            data: {
-                user: {
-                    _id: user._id,
-                    name: user.name,
-                    email: user.email,
-                    role: user.role,
-                    phone: user.phone,
-                    isVerified: user.isVerified
-                },
-                token: generateToken(user._id)
-            }
-        });
+        sendAuthResponse(res, user);
 
     } catch (error) {
         console.error(error);
@@ -239,7 +321,7 @@ const loginUser = async (req, res) => {
             // Enforce OTP on Login as well
             const contact = normalizeContact(user.email); // Use email as primary contact for OTP
             logOtpEvent('login_requested', contact);
-            const lastOtp = await Otp.findOne({ contact });
+            const lastOtp = await Otp.findOne({ contact, purpose: 'login' });
 
             if (lastOtp && (Date.now() - new Date(lastOtp.lastSentAt).getTime() < 60000)) {
                 return res.status(429).json({ success: false, message: 'Please wait 60 seconds before requesting a new OTP' });
@@ -253,6 +335,7 @@ const loginUser = async (req, res) => {
 
             await Otp.create({
                 contact,
+                purpose: 'login',
                 otp: numericOtp,
                 expiresAt: new Date(Date.now() + 5 * 60000)
             });
@@ -358,6 +441,89 @@ const updateUserProfile = async (req, res) => {
     }
 };
 
+// @desc    Send password reset link
+// @route   POST /api/auth/forgot-password
+// @access  Public
+const forgotPassword = async (req, res) => {
+    try {
+        const email = normalizeContact(req.body.email);
+
+        if (!email || !isValidEmail(email)) {
+            return res.status(400).json({ success: false, message: 'Please add a valid email' });
+        }
+
+        const genericMessage = 'If an account exists for this email, a password reset link has been sent.';
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.json({ success: true, message: genericMessage });
+        }
+
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        user.resetPasswordToken = hashResetToken(resetToken);
+        user.resetPasswordExpires = Date.now() + 30 * 60 * 1000;
+        await user.save({ validateBeforeSave: false });
+
+        const resetUrl = `${getClientUrl()}/reset-password/${resetToken}`;
+        const emailSent = await sendPasswordResetEmail(user.email, resetUrl);
+
+        if (!emailSent) {
+            user.resetPasswordToken = undefined;
+            user.resetPasswordExpires = undefined;
+            await user.save({ validateBeforeSave: false });
+            return res.status(502).json({ success: false, message: 'Failed to send reset email. Check email configuration on the server.' });
+        }
+
+        res.json({ success: true, message: genericMessage });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+    }
+};
+
+// @desc    Reset user password with token
+// @route   POST /api/auth/reset-password/:token
+// @access  Public
+const resetPassword = async (req, res) => {
+    try {
+        const resetToken = req.params.token;
+        const password = String(req.body.password || req.body.newPassword || '');
+        const confirmPassword = req.body.confirmPassword;
+
+        if (!resetToken) {
+            return res.status(400).json({ success: false, message: 'Reset token is required' });
+        }
+
+        if (password.length < 8) {
+            return res.status(400).json({ success: false, message: 'Password must be at least 8 characters long' });
+        }
+
+        if (confirmPassword !== undefined && confirmPassword !== password) {
+            return res.status(400).json({ success: false, message: 'Passwords do not match' });
+        }
+
+        const user = await User.findOne({
+            resetPasswordToken: hashResetToken(resetToken),
+            resetPasswordExpires: { $gt: Date.now() }
+        }).select('+resetPasswordToken +resetPasswordExpires');
+
+        if (!user) {
+            return res.status(400).json({ success: false, message: 'Reset link is invalid or expired' });
+        }
+
+        user.password = password;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+        user.isVerified = true;
+        await user.save();
+
+        res.json({ success: true, message: 'Password reset successfully. You can now sign in.' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+    }
+};
+
 // @desc    Check OTP email configuration without exposing secrets
 // @route   GET /api/auth/otp-health
 // @access  Public
@@ -384,5 +550,7 @@ module.exports = {
     updateUserProfile,
     sendOtp,
     verifyOtp,
+    forgotPassword,
+    resetPassword,
     getOtpHealth
 };

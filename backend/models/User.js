@@ -34,6 +34,14 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    resetPasswordToken: {
+        type: String,
+        select: false
+    },
+    resetPasswordExpires: {
+        type: Date,
+        select: false
+    },
     addresses: [{
         street: String,
         city: String,
@@ -48,6 +56,10 @@ const userSchema = new mongoose.Schema({
 // Encrypt password using bcrypt
 userSchema.pre('save', async function() {
     if (!this.isModified('password')) {
+        return;
+    }
+
+    if (this.$locals.skipPasswordHash) {
         return;
     }
 
