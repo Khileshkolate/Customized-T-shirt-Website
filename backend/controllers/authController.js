@@ -39,7 +39,9 @@ const buildUserPayload = (user) => ({
     email: user.email,
     role: user.role,
     phone: user.phone,
-    isVerified: user.isVerified
+    isVerified: user.isVerified,
+    addresses: user.addresses,
+    preferences: user.preferences
 });
 
 const sendAuthResponse = (res, user, statusCode = 200) => {
@@ -369,7 +371,9 @@ const getUserProfile = async (req, res) => {
                     email: user.email,
                     role: user.role,
                     phone: user.phone,
-                    isVerified: user.isVerified
+                    isVerified: user.isVerified,
+                    addresses: user.addresses,
+                    preferences: user.preferences
                 }
             });
         } else {
@@ -392,38 +396,96 @@ const updateUserProfile = async (req, res) => {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
-        const { name, phone, address } = req.body;
+        const { name, phone, address, addressDetails, preferences } = req.body;
 
         if (name !== undefined) {
-            user.name = name;
+            const trimmedName = String(name).trim();
+            if (!trimmedName) {
+                return res.status(400).json({ success: false, message: 'Name cannot be empty' });
+            }
+            user.name = trimmedName;
         }
 
         if (phone !== undefined) {
-            user.phone = phone;
+            const normalizedPhone = normalizeContact(phone);
+            if (normalizedPhone && normalizedPhone.length !== 10) {
+                return res.status(400).json({ success: false, message: 'Please add a valid 10-digit phone number' });
+            }
+            user.phone = normalizedPhone;
         }
 
-        if (address !== undefined) {
+        if (addressDetails !== undefined || address !== undefined) {
+            const currentAddress = user.addresses?.[0]?.toObject?.() || user.addresses?.[0] || {};
+            const nextAddress = addressDetails || {};
             user.addresses = [{
-                ...(user.addresses?.[0]?.toObject?.() || user.addresses?.[0] || {}),
-                street: address,
+                ...currentAddress,
+                street: addressDetails !== undefined ? String(nextAddress.street || '').trim() : address,
+                city: addressDetails !== undefined ? String(nextAddress.city || '').trim() : currentAddress.city,
+                state: addressDetails !== undefined ? String(nextAddress.state || '').trim() : currentAddress.state,
+                zipCode: addressDetails !== undefined ? String(nextAddress.zipCode || '').replace(/\D/g, '').slice(0, 6) : currentAddress.zipCode,
                 isDefault: true
             }];
+        }
+
+        if (preferences !== undefined) {
+            user.preferences = {
+                ...(user.preferences?.toObject?.() || user.preferences || {}),
+                emailNotifications: Boolean(preferences.emailNotifications),
+                orderUpdates: Boolean(preferences.orderUpdates),
+                marketingEmails: Boolean(preferences.marketingEmails)
+            };
         }
 
         const updatedUser = await user.save();
 
         res.json({
             success: true,
-            data: {
-                _id: updatedUser._id,
-                name: updatedUser.name,
-                email: updatedUser.email,
-                role: updatedUser.role,
-                phone: updatedUser.phone,
-                isVerified: updatedUser.isVerified,
-                addresses: updatedUser.addresses
-            }
+            data: buildUserPayload(updatedUser)
         });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+    }
+};
+
+// @desc    Change logged-in user's password
+// @route   PUT /api/auth/password
+// @access  Private
+const changePassword = async (req, res) => {
+    try {
+        const currentPassword = String(req.body.currentPassword || '');
+        const newPassword = String(req.body.newPassword || req.body.password || '');
+        const confirmPassword = req.body.confirmPassword;
+
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ success: false, message: 'Current password and new password are required' });
+        }
+
+        if (newPassword.length < 8) {
+            return res.status(400).json({ success: false, message: 'Password must be at least 8 characters long' });
+        }
+
+        if (confirmPassword !== undefined && confirmPassword !== newPassword) {
+            return res.status(400).json({ success: false, message: 'Passwords do not match' });
+        }
+
+        const user = await User.findById(req.user._id).select('+password');
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        const isMatch = await user.matchPassword(currentPassword);
+        if (!isMatch) {
+            return res.status(401).json({ success: false, message: 'Current password is incorrect' });
+        }
+
+        user.password = newPassword;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+        await user.save();
+
+        res.json({ success: true, message: 'Password changed successfully' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: 'Server Error', error: error.message });
@@ -537,6 +599,7 @@ module.exports = {
     loginUser,
     getUserProfile,
     updateUserProfile,
+    changePassword,
     sendOtp,
     verifyOtp,
     forgotPassword,

@@ -5,6 +5,7 @@ const {
     loginUser,
     getUserProfile,
     updateUserProfile,
+    changePassword,
     sendOtp,
     verifyOtp,
     forgotPassword,
@@ -20,6 +21,7 @@ router.post('/send-otp', sendOtp);
 router.post('/verify-otp', verifyOtp);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password/:token', resetPassword);
+router.put('/password', protect, changePassword);
 router.route('/profile')
     .get(protect, getUserProfile)
     .put(protect, updateUserProfile);

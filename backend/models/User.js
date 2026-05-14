@@ -48,7 +48,21 @@ const userSchema = new mongoose.Schema({
         state: String,
         zipCode: String,
         isDefault: Boolean
-    }]
+    }],
+    preferences: {
+        emailNotifications: {
+            type: Boolean,
+            default: true
+        },
+        orderUpdates: {
+            type: Boolean,
+            default: true
+        },
+        marketingEmails: {
+            type: Boolean,
+            default: false
+        }
+    }
 }, {
     timestamps: true
 });
