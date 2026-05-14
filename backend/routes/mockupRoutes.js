@@ -7,14 +7,13 @@ const {
     deleteMockup
 } = require('../controllers/mockupController');
 const { protect, admin } = require('../middleware/auth');
-const { storage } = require('../utils/cloudinary');
 
 const allowedImageTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
 const upload = multer({
-    storage,
+    storage: multer.memoryStorage(),
     limits: {
-        fileSize: 10 * 1024 * 1024 // 10MB
+        fileSize: 5 * 1024 * 1024 // MongoDB stores mockups as base64 data URLs.
     },
     fileFilter: (req, file, cb) => {
         if (!allowedImageTypes.has(file.mimetype)) {
@@ -31,7 +30,7 @@ const uploadMockupImage = (req, res, next) => {
         }
 
         const message = error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE'
-            ? 'Image must be 10MB or smaller'
+            ? 'Image must be 5MB or smaller'
             : error.message;
 
         return res.status(400).json({ success: false, message });

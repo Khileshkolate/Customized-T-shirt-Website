@@ -22,43 +22,82 @@ const ProductDetails = () => {
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
 
-  const { mockups, fetchMockups, colors: adminColors, fetchAttributes } = useAdminStore();
+  const { mockups, fetchMockups, colors: adminColors, fetchAttributes, getMockup } = useAdminStore();
 
   useEffect(() => {
     if (Object.keys(mockups).length === 0) fetchMockups();
     if (adminColors.length === 0) fetchAttributes();
   }, []);
 
-  const getProductImage = () => {
-    if (!product || !product.type) return null;
-    let selectedColorHex = selectedColor || product.colors?.[0] || '#FFFFFF';
-    const matchedColorObj = adminColors.find(c => c.meta?.hex?.toLowerCase() === selectedColorHex?.toLowerCase());
-    const colorValue = matchedColorObj ? matchedColorObj.value : 'white';
-    const typeValue = product.type.toLowerCase();
-    const key = `${typeValue}_${colorValue}_front`;
-    return mockups[key] || null;
+  const normalizeHex = (value) => String(value || '').trim().toLowerCase();
+  const normalizeMockupPart = (value) => String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  const getProductTypeValue = () => product?.type || 'round-neck';
+
+  const getSelectedColorMeta = () => {
+    const selected = selectedColor || product?.colors?.[0] || '#FFFFFF';
+    const normalizedSelected = normalizeHex(selected);
+
+    return adminColors.find((color) => {
+      const hex = normalizeHex(color.meta?.hex);
+      const value = normalizeHex(color.value);
+      const name = normalizeHex(color.name);
+      return hex === normalizedSelected || value === normalizedSelected || name === normalizedSelected;
+    }) || {
+      value: selected,
+      name: selected,
+      meta: { hex: selected }
+    };
   };
 
   const getMockupImages = () => {
     if (!product || !product.type) return [];
-    let selectedColorHex = selectedColor || product.colors?.[0] || '#FFFFFF';
-    const matchedColorObj = adminColors.find(c => c.meta?.hex?.toLowerCase() === selectedColorHex?.toLowerCase());
-    const colorValue = matchedColorObj ? matchedColorObj.value : 'white';
-    const typeValue = product.type.toLowerCase();
-    
-    const frontKey = `${typeValue}_${colorValue}_front`;
-    const backKey = `${typeValue}_${colorValue}_back`;
-    
+    const selectedColorMeta = getSelectedColorMeta();
+    const colorCandidates = [
+      selectedColorMeta.value,
+      selectedColorMeta.name,
+      selectedColor
+    ].filter(Boolean);
+
     const images = [];
-    if (mockups[frontKey]) images.push(mockups[frontKey]);
-    if (mockups[backKey]) images.push(mockups[backKey]);
+    ['front', 'back'].forEach((view) => {
+      const image = colorCandidates
+        .map((color) => getMockup(getProductTypeValue(), color, view))
+        .find(Boolean);
+      if (image && !images.includes(image)) {
+        images.push(image);
+      }
+    });
     
     return images;
   };
 
-  const displayImages = getMockupImages().length > 0 
-    ? getMockupImages() 
-    : (product?.images?.length > 0 ? product.images : [getProductImage()]).filter(Boolean);
+  const getAnyProductTypeMockups = () => {
+    if (!product?.type) return [];
+    const typeValue = normalizeMockupPart(getProductTypeValue());
+    const seen = new Set();
+
+    return Object.entries(mockups)
+      .filter(([key]) => key.startsWith(`${typeValue}_`) && (key.endsWith('_front') || key.endsWith('_back')))
+      .map(([, imageUrl]) => imageUrl)
+      .filter((imageUrl) => {
+        if (!imageUrl || seen.has(imageUrl)) return false;
+        seen.add(imageUrl);
+        return true;
+      })
+      .slice(0, 2);
+  };
+
+  const selectedMockupImages = getMockupImages();
+  const anyProductTypeMockups = getAnyProductTypeMockups();
+  const displayImages = selectedMockupImages.length > 0
+    ? selectedMockupImages
+    : (anyProductTypeMockups.length > 0 ? anyProductTypeMockups : product?.images || []).filter(Boolean);
 
   // Clamp active image if changing color reduces the available images
   useEffect(() => {
@@ -99,7 +138,7 @@ const ProductDetails = () => {
       productId: product._id,
       productName: product.name,
       price: product.discountPrice || product.price,
-      image: product.images?.[0]?.url,
+      image: displayImages[activeImage]?.url || displayImages[activeImage] || product.images?.[0]?.url,
       color: selectedColor,
       size: selectedSize,
       quantity,
@@ -110,8 +149,19 @@ const ProductDetails = () => {
   };
   
   const handleCustomize = () => {
-    // Navigate to designer with params
-    navigate(`/designer?product=${product._id}&color=${encodeURIComponent(selectedColor)}&size=${selectedSize}`);
+    const selectedColorMeta = getSelectedColorMeta();
+    const colorValue = selectedColorMeta.value || selectedColor;
+    const colorHex = selectedColorMeta.meta?.hex || selectedColor;
+    const params = new URLSearchParams({
+      product: product._id,
+      type: getProductTypeValue(),
+      color: colorValue,
+      colorHex,
+      size: selectedSize,
+      qty: String(quantity)
+    });
+
+    navigate(`/designer?${params.toString()}`);
   };
 
   if (loading) return <Loader />;

@@ -1,15 +1,43 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import CanvasEditor from '../components/designer/CanvasEditor';
 import ToolPanel from '../components/designer/ToolPanel';
 import RightPanel from '../components/designer/RightPanel';
 import useDesignStore from '../store/designStore';
 import { useAuth } from '../contexts/AuthContext';
 import { Undo, Redo, Copy, Trash2, X, Download, Palette } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 const Designer = () => {
-  const { clearCanvas, deleteSelected, undo, redo, cloneSelected, exportDesign, historyIndex, history } = useDesignStore();
+  const {
+    clearCanvas,
+    deleteSelected,
+    undo,
+    redo,
+    cloneSelected,
+    exportDesign,
+    historyIndex,
+    history,
+    setShirtType,
+    setShirtColor,
+    setSize,
+    setQty
+  } = useDesignStore();
   const { user } = useAuth();
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const type = params.get('type');
+    const color = params.get('color');
+    const colorHex = params.get('colorHex');
+    const size = params.get('size');
+    const qty = Number(params.get('qty'));
+
+    if (type) setShirtType(type);
+    if (color) setShirtColor(color, colorHex || color);
+    if (size) setSize(size);
+    if (Number.isFinite(qty) && qty > 0) setQty(qty);
+  }, [location.search, setShirtType, setShirtColor, setSize, setQty]);
 
   return (
     <div className="h-screen w-screen bg-gray-50 flex flex-col font-sans overflow-hidden text-gray-800 selection:bg-primary-500 selection:text-white fixed inset-0 z-[100]">

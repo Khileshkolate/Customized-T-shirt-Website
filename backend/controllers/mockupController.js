@@ -1,21 +1,4 @@
 const Mockup = require('../models/Mockup');
-const path = require('path');
-const fs = require('fs');
-
-const resolveUploadPath = (imageUrl) => {
-    return path.join(__dirname, '..', imageUrl.replace(/^\/+/, ''));
-};
-
-const removeFileIfExists = (imageUrl) => {
-    if (!imageUrl) {
-        return;
-    }
-
-    const filePath = resolveUploadPath(imageUrl);
-    if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-    }
-};
 
 // @desc    Get all mockups
 // @route   GET /api/mockups
@@ -37,55 +20,42 @@ const getMockups = async (req, res) => {
 // @route   POST /api/mockups
 // @access  Private/Admin
 const uploadMockup = async (req, res) => {
-    let uploadedImageUrl;
-
     try {
         const { key: rawKey } = req.body;
         if (!rawKey) {
             return res.status(400).json({ success: false, message: 'Mockup key is required' });
         }
 
-        const key = rawKey.toLowerCase();
-        
-        // Handle image path from Multer (Cloudinary or Local)
-        let imageUrl = req.file.path;
-        
-        // Normalize: Cloudinary URLs start with http, local paths need formatting
-        if (!imageUrl.startsWith('http')) {
-            // Convert Windows backslashes to forward slashes for URL consistency
-            imageUrl = imageUrl.replace(/\\/g, '/');
-            // Ensure leading slash
-            if (!imageUrl.startsWith('/')) {
-                imageUrl = '/' + imageUrl;
-            }
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'Mockup image is required' });
         }
-        
-        uploadedImageUrl = imageUrl;
+
+        const key = rawKey.toLowerCase();
+        const imageUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
         
         // Parse key to get type, color, view
         const [type, color, view] = key.split('_');
 
         if (!type || !color || !['front', 'back'].includes(view)) {
-            // Cleanup file if validation fails
-            if (!imageUrl.startsWith('http')) {
-                removeFileIfExists(imageUrl);
-            }
             return res.status(400).json({ success: false, message: 'Mockup key must use type_color_front or type_color_back format' });
         }
 
         let mockup = await Mockup.findOne({ key });
 
         if (mockup) {
-            // Delete old local file if exists
-            if (!mockup.imageUrl.startsWith('http')) {
-                removeFileIfExists(mockup.imageUrl);
-            }
             mockup.imageUrl = imageUrl;
+            mockup.imageMimeType = req.file.mimetype;
+            mockup.imageSize = req.file.size;
+            mockup.type = type;
+            mockup.color = color;
+            mockup.view = view;
             await mockup.save();
         } else {
             mockup = await Mockup.create({
                 key,
                 imageUrl,
+                imageMimeType: req.file.mimetype,
+                imageSize: req.file.size,
                 type,
                 color,
                 view
@@ -97,9 +67,6 @@ const uploadMockup = async (req, res) => {
             data: mockup
         });
     } catch (error) {
-        if (uploadedImageUrl && !uploadedImageUrl.startsWith('http')) {
-            removeFileIfExists(uploadedImageUrl);
-        }
         console.error(error);
         res.status(500).json({ success: false, message: 'Server Error' });
     }
@@ -112,9 +79,6 @@ const deleteMockup = async (req, res) => {
     try {
         const mockup = await Mockup.findOne({ key: req.params.key.toLowerCase() });
         if (mockup) {
-            if (!mockup.imageUrl.startsWith('http')) {
-                removeFileIfExists(mockup.imageUrl);
-            }
             await mockup.deleteOne();
             res.json({ success: true, message: 'Mockup removed' });
         } else {
