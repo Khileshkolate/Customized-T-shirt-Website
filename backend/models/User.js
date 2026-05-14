@@ -47,6 +47,12 @@ const userSchema = new mongoose.Schema({
         city: String,
         state: String,
         zipCode: String,
+        location: {
+            latitude: Number,
+            longitude: Number,
+            accuracy: Number,
+            capturedAt: Date
+        },
         isDefault: Boolean
     }],
     preferences: {

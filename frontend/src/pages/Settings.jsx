@@ -17,6 +17,7 @@ import {
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import axios from '../utils/axiosInstance';
+import LocationPicker from '../components/common/LocationPicker';
 
 const Toggle = ({ checked, onChange, label, description }) => (
   <button
@@ -42,7 +43,8 @@ const Settings = () => {
     street: '',
     city: '',
     state: '',
-    zipCode: ''
+    zipCode: '',
+    location: null
   });
   const [preferences, setPreferences] = useState({
     emailNotifications: true,
@@ -67,7 +69,8 @@ const Settings = () => {
       street: address.street || '',
       city: address.city || '',
       state: address.state || '',
-      zipCode: address.zipCode || ''
+      zipCode: address.zipCode || '',
+      location: address.location || null
     });
     setPreferences({
       emailNotifications: user?.preferences?.emailNotifications ?? true,
@@ -105,7 +108,8 @@ const Settings = () => {
           street: profileForm.street.trim(),
           city: profileForm.city.trim(),
           state: profileForm.state.trim(),
-          zipCode: profileForm.zipCode
+          zipCode: profileForm.zipCode,
+          location: profileForm.location
         },
         preferences
       });
@@ -288,6 +292,13 @@ const Settings = () => {
                     />
                   </div>
                 </div>
+              </div>
+
+              <div className="mt-5">
+                <LocationPicker
+                  value={profileForm.location}
+                  onChange={(location) => setProfileForm((current) => ({ ...current, location }))}
+                />
               </div>
 
               <div className="mt-6 space-y-3">

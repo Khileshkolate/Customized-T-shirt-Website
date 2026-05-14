@@ -99,6 +99,24 @@ const hashResetToken = (token) => (
 
 const isValidEmail = (email) => /^\S+@\S+\.\S+$/.test(email);
 
+const normalizeLocation = (location) => {
+    if (!location) return undefined;
+
+    const latitude = Number(location.latitude);
+    const longitude = Number(location.longitude);
+
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+        return undefined;
+    }
+
+    return {
+        latitude,
+        longitude,
+        accuracy: Number.isFinite(Number(location.accuracy)) ? Number(location.accuracy) : undefined,
+        capturedAt: location.capturedAt ? new Date(location.capturedAt) : new Date()
+    };
+};
+
 // @desc    Register a new user after email OTP verification
 // @route   POST /api/auth/register
 // @access  Public
@@ -423,6 +441,7 @@ const updateUserProfile = async (req, res) => {
                 city: addressDetails !== undefined ? String(nextAddress.city || '').trim() : currentAddress.city,
                 state: addressDetails !== undefined ? String(nextAddress.state || '').trim() : currentAddress.state,
                 zipCode: addressDetails !== undefined ? String(nextAddress.zipCode || '').replace(/\D/g, '').slice(0, 6) : currentAddress.zipCode,
+                location: addressDetails !== undefined ? normalizeLocation(nextAddress.location) : currentAddress.location,
                 isDefault: true
             }];
         }

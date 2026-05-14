@@ -7,6 +7,7 @@ import {
 import { Link } from 'react-router-dom';
 import axios from '../utils/axiosInstance';
 import toast from 'react-hot-toast';
+import LocationPicker from '../components/common/LocationPicker';
 
 const Profile = () => {
   const { user, updateProfile, logout } = useAuth();
@@ -15,7 +16,8 @@ const Profile = () => {
     name: '',
     email: '',
     phone: '',
-    address: ''
+    address: '',
+    location: null
   });
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -27,7 +29,8 @@ const Profile = () => {
         name: user.name || '',
         email: user.email || '',
         phone: user.phone || '',
-        address: user.addresses?.[0]?.street || ''
+        address: user.addresses?.[0]?.street || '',
+        location: user.addresses?.[0]?.location || null
       });
       fetchOrders();
     }
@@ -46,7 +49,14 @@ const Profile = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await updateProfile(formData);
+      await updateProfile({
+        name: formData.name,
+        phone: formData.phone,
+        addressDetails: {
+          street: formData.address,
+          location: formData.location
+        }
+      });
       setIsEditing(false);
       toast.success('Profile updated successfully');
     } catch (error) {
@@ -227,6 +237,15 @@ const Profile = () => {
                         className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg disabled:bg-gray-50 resize-none"
                       />
                     </div>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <LocationPicker
+                      value={formData.location}
+                      onChange={(location) => setFormData({ ...formData, location })}
+                      disabled={!isEditing}
+                      compact
+                    />
                   </div>
                 </div>
 

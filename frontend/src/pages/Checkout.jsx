@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,6 +7,7 @@ import { CheckCircle2, ChevronRight, CreditCard, MapPin, ShieldCheck, Truck, Loc
 import toast from 'react-hot-toast';
 
 import axios from '../utils/axiosInstance';
+import LocationPicker from '../components/common/LocationPicker';
 
 const Checkout = () => {
   const { cartItems, cartTotal, clearCart } = useCart();
@@ -28,9 +29,24 @@ const Checkout = () => {
     street: '',
     city: '',
     state: '',
-    zipCode: ''
+    zipCode: '',
+    location: null
   });
   const [payment, setPayment] = useState({ cardNumber: '', expiry: '', cvc: '' });
+
+  useEffect(() => {
+    const savedAddress = user?.addresses?.[0];
+    if (!savedAddress) return;
+
+    setAddress((current) => ({
+      ...current,
+      street: current.street || savedAddress.street || '',
+      city: current.city || savedAddress.city || '',
+      state: current.state || savedAddress.state || '',
+      zipCode: current.zipCode || savedAddress.zipCode || '',
+      location: current.location || savedAddress.location || null
+    }));
+  }, [user]);
 
   const handleNextStep = (e) => {
     e.preventDefault();
@@ -103,7 +119,8 @@ const Checkout = () => {
                       zipCode: address.zipCode, // the backend normalizes zipCode -> postalCode
                       country: 'India',
                       email: contact.email,
-                      phone: contact.phone
+                      phone: contact.phone,
+                      location: address.location
                     },
                     paymentMethod: 'Razorpay',
                     paymentResult: {
@@ -249,6 +266,10 @@ const Checkout = () => {
                         <input type="text" placeholder="State" required value={address.state} onChange={e => setAddress({...address, state: e.target.value})} className="col-span-3 sm:col-span-1 border border-gray-300 px-4 py-3 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" />
                         <input type="text" placeholder="ZIP" required value={address.zipCode} onChange={e => setAddress({...address, zipCode: e.target.value})} className="col-span-3 sm:col-span-1 border border-gray-300 px-4 py-3 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" />
                       </div>
+                      <LocationPicker
+                        value={address.location}
+                        onChange={(location) => setAddress({ ...address, location })}
+                      />
                       <button type="submit" className="w-full sm:w-auto bg-primary-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-500/30">
                         Continue to Payment
                       </button>
