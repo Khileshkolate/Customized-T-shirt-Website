@@ -5,15 +5,23 @@ const {
     loginUser,
     getUserProfile,
     updateUserProfile,
+    changePassword,
     sendOtp,
-    verifyOtp
+    verifyOtp,
+    forgotPassword,
+    resetPassword,
+    getOtpHealth
 } = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
 
+router.get('/otp-health', getOtpHealth);
 router.post('/register', registerUser);
 router.post('/login', loginUser);
 router.post('/send-otp', sendOtp);
 router.post('/verify-otp', verifyOtp);
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password/:token', resetPassword);
+router.put('/password', protect, changePassword);
 router.route('/profile')
     .get(protect, getUserProfile)
     .put(protect, updateUserProfile);

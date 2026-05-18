@@ -93,13 +93,13 @@ const Register = () => {
     const result = await register(formData);
     
     if (result.success) {
-      toast.success(`OTP sent to +91 ${formData.phone}`);
+      toast.success(`OTP sent to ${formData.email}`);
       setOtpSent(true);
       setTimer(180);
       setResendEnabled(false);
       setTimeout(() => otpInputRefs.current[0]?.focus(), 100);
     } else {
-      toast.error(result.message || 'Failed to send OTP');
+      toast.error(result.error || result.message || 'Failed to send OTP');
     }
   } catch (error) {
     console.error('Registration error:', error);
@@ -139,12 +139,12 @@ const Register = () => {
     }
     
     setLoading(true);
-    const result = await verifyOtp(enteredOtp, formData.phone);
+    const result = await verifyOtp(enteredOtp, formData.email);
     if (result.success) {
       toast.success('Registration successful!');
       navigate('/');
     } else {
-      toast.error('Invalid OTP. Please try again.');
+      toast.error(result.error || 'Invalid OTP. Please try again.');
       setOtp(['', '', '', '', '', '']);
       otpInputRefs.current[0]?.focus();
     }
@@ -301,10 +301,10 @@ const Register = () => {
                 <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Shield className="h-8 w-8 text-primary-600" />
                 </div>
-                <h2 className="text-2xl font-bold">Verify Your Phone</h2>
+                <h2 className="text-2xl font-bold">Verify Your Email</h2>
                 <p className="text-gray-600 mt-2">
                   Enter the 6-digit OTP sent to <br />
-                  <span className="font-semibold">+91 {formData.phone}</span>
+                  <span className="font-semibold">{formData.email}</span>
                 </p>
               </div>
 

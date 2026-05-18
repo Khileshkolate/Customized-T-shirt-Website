@@ -730,7 +730,9 @@ import {
   Tag,
   Printer,
   Layers,
-  Sparkles
+  Sparkles,
+  Settings,
+  Heart
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useCart } from '../../contexts/CartContext'
@@ -1146,6 +1148,22 @@ const Navbar = () => {
                           <Palette className="h-4 w-4" />
                           <span>My Designs</span>
                         </Link>
+                        <Link
+                          to="/wishlist"
+                          className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-gray-700"
+                          onClick={() => setIsProfileOpen(false)}
+                        >
+                          <Heart className="h-4 w-4" />
+                          <span>Wishlist</span>
+                        </Link>
+                        <Link
+                          to="/settings"
+                          className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-gray-700"
+                          onClick={() => setIsProfileOpen(false)}
+                        >
+                          <Settings className="h-4 w-4" />
+                          <span>Settings</span>
+                        </Link>
                       </div>
                       
                       <div className="border-t border-gray-100 py-2">
@@ -1351,6 +1369,22 @@ const Navbar = () => {
                       >
                         <Palette className="h-5 w-5" />
                         <span className="font-medium">My Designs</span>
+                      </Link>
+                      <Link
+                        to="/wishlist"
+                        className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:text-primary-600 hover:bg-gray-50 rounded-lg transition-colors"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <Heart className="h-5 w-5" />
+                        <span className="font-medium">Wishlist</span>
+                      </Link>
+                      <Link
+                        to="/settings"
+                        className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:text-primary-600 hover:bg-gray-50 rounded-lg transition-colors"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <Settings className="h-5 w-5" />
+                        <span className="font-medium">Settings</span>
                       </Link>
                     </div>
                     

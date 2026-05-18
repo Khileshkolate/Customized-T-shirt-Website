@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const path = require('path');
 const {
     getMockups,
     uploadMockup,
@@ -11,33 +10,15 @@ const { protect, admin } = require('../middleware/auth');
 
 const allowedImageTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
-// Multer config
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/mockups/');
-    },
-    filename: (req, file, cb) => {
-        const ext = path.extname(file.originalname).toLowerCase();
-        const baseName = path.basename(file.originalname, ext)
-            .replace(/[^a-z0-9_-]/gi, '-')
-            .replace(/-+/g, '-')
-            .replace(/^-|-$/g, '')
-            .slice(0, 80) || 'mockup';
-
-        cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}-${baseName}${ext}`);
-    }
-});
-
 const upload = multer({
-    storage,
+    storage: multer.memoryStorage(),
     limits: {
-        fileSize: 5 * 1024 * 1024
+        fileSize: 5 * 1024 * 1024 // MongoDB stores mockups as base64 data URLs.
     },
     fileFilter: (req, file, cb) => {
         if (!allowedImageTypes.has(file.mimetype)) {
             return cb(new Error('Only JPEG, PNG, and WebP images are allowed'));
         }
-
         cb(null, true);
     }
 });

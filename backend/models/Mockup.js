@@ -10,6 +10,12 @@ const mockupSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    imageMimeType: {
+        type: String
+    },
+    imageSize: {
+        type: Number
+    },
     type: {
         type: String,
         required: true

@@ -21,7 +21,9 @@ const Login = () => {
       if (result.success) {
         if (result.requireOtp) {
             toast.success('OTP sent! Please verify.');
-            navigate('/otp-verification', { state: { phone: result.phone } });
+            // Safety fallback: Use email from local state if result.contact is missing
+            const contactInfo = result.contact || result.phone || result.email || email;
+            navigate('/otp-verification', { state: { contact: contactInfo } });
             return;
         }
 
@@ -92,6 +94,12 @@ const Login = () => {
               </div>
             </div>
 
+            <div className="flex justify-end -mt-2">
+              <Link to="/forgot-password" className="text-sm font-semibold text-primary-600 hover:text-primary-700">
+                Forgot password?
+              </Link>
+            </div>
+
             <button
               type="submit"
               disabled={loading}
@@ -119,10 +127,6 @@ const Login = () => {
                   Create account
                 </Link>
               </p>
-              <p className="text-sm text-gray-500 mt-2">
-                For testing, use admin credentials: admin@viragkala.com / password123
-              </p>
-
             </div>
           </div>
         </div>

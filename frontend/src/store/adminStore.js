@@ -2,13 +2,40 @@ import { create } from 'zustand';
 import { getMockups, uploadMockup } from '../api/adminApi';
 import toast from 'react-hot-toast';
 
-const BASE_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || '';
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://customized-t-shirt-website.onrender.com/api' : '/api');
+const BASE_URL = API_URL.replace(/\/api\/?$/, '');
+
 const resolveAssetUrl = (url) => {
-  if (!url || /^https?:\/\//i.test(url) || url.startsWith('data:')) {
+  if (!url || typeof url !== 'string' || /^https?:\/\//i.test(url) || url.startsWith('data:')) {
     return url;
   }
 
-  return `${BASE_URL}${url.startsWith('/') ? url : `/${url}`}`;
+  const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+  return `${BASE_URL}${cleanUrl}`;
+};
+
+const normalizeMockupPart = (value) => {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+};
+
+const normalizeLoosePart = (value) => {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ');
+};
+
+const buildMockupKey = (type, color, view) => {
+  return `${normalizeMockupPart(type)}_${normalizeMockupPart(color)}_${normalizeMockupPart(view)}`;
+};
+
+const getLegacyKey = (type, color, view) => {
+  return `${normalizeLoosePart(type)}_${normalizeLoosePart(color)}_${normalizeLoosePart(view)}`;
 };
 
 const useAdminStore = create((set, get) => ({
@@ -66,8 +93,17 @@ const useAdminStore = create((set, get) => ({
       const formattedMockups = {};
 
       mockupsData.forEach(m => {
-        const key = m.key;
-        formattedMockups[key] = resolveAssetUrl(m.imageUrl);
+        const imageUrl = resolveAssetUrl(m.imageUrl);
+        const rawKey = String(m.key || '').toLowerCase();
+
+        if (rawKey) {
+          formattedMockups[rawKey] = imageUrl;
+        }
+
+        if (m.type && m.color && m.view) {
+          formattedMockups[buildMockupKey(m.type, m.color, m.view)] = imageUrl;
+          formattedMockups[getLegacyKey(m.type, m.color, m.view)] = imageUrl;
+        }
       });
 
       set({ mockups: formattedMockups, loading: false });
@@ -79,13 +115,14 @@ const useAdminStore = create((set, get) => ({
     }
   },
   
-  // `key` is in format "Type_Color_view" (e.g. "Round Neck_White_front")
+  // `key` is in format "type_color_view" (slugs)
   uploadMockup: async (key, file) => {
     const toastId = toast.loading('Uploading Mockup...');
+    const normalizedKey = String(key).toLowerCase();
 
     try {
       const formData = new FormData();
-      formData.append('key', key);
+      formData.append('key', normalizedKey);
       formData.append('image', file);
 
       await uploadMockup(formData);
@@ -100,20 +137,31 @@ const useAdminStore = create((set, get) => ({
   },
 
   removeMockup: async (key) => {
-    // Note: The UI currently uses this to 'remove an image'. 
-    // The backend mockupController doesn't have a single-view delete, it deletes the whole mockup.
-    // For now, we'll keep the local state clear to match UI behavior, but a full backend view deletion 
-    // requires more controller logic. For now, this just hides it locally until refresh.
-    set((state) => {
-      const newMockups = { ...state.mockups };
-      delete newMockups[key];
-      return { mockups: newMockups };
-    });
+    try {
+        const { deleteMockup } = await import('../api/adminApi');
+        const [type, color, view] = String(key).split('_');
+        const deleteKey = String(key).toLowerCase();
+        await deleteMockup(deleteKey);
+        set((state) => {
+            const newMockups = { ...state.mockups };
+            delete newMockups[deleteKey];
+            delete newMockups[buildMockupKey(type, color, view)];
+            delete newMockups[getLegacyKey(type, color, view)];
+            return { mockups: newMockups };
+        });
+        toast.success('Mockup Removed');
+    } catch (error) {
+        console.error('Failed to remove mockup:', error);
+        toast.error('Failed to remove mockup');
+    }
   },
 
-  getMockup: (typeId, colorId, view) => {
-    const key = `${typeId}_${colorId}_${view}`;
-    return get().mockups[key] || null;
+  getMockup: (typeValue, colorValue, view) => {
+    if (!typeValue || !colorValue || !view) return null;
+    const mockups = get().mockups;
+    const normalizedKey = buildMockupKey(typeValue, colorValue, view);
+    const legacyKey = getLegacyKey(typeValue, colorValue, view);
+    return mockups[normalizedKey] || mockups[legacyKey] || null;
   }
 }));
 

@@ -4,6 +4,12 @@ import toast from 'react-hot-toast';
 
 const AuthContext = createContext();
 
+const normalizeContact = (contact) => {
+  if (!contact) return contact;
+  const value = String(contact).trim();
+  return value.includes('@') ? value.toLowerCase() : value.replace(/\s+/g, '');
+};
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -45,11 +51,11 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       // Regular user login (API call)
-      const response = await axios.post('/auth/login', { email, password });
+      const response = await axios.post('/auth/login', { email: normalizeContact(email), password });
       
       // If login requires OTP (secure 2FA flow)
       if (response.data.requireOtp) {
-          return { success: true, requireOtp: true, phone: response.data.phone, message: response.data.message };
+          return { success: true, requireOtp: true, contact: response.data.contact, message: response.data.message };
       }
 
       const { token, user: userData } = response.data.data;
@@ -94,7 +100,7 @@ export const AuthProvider = ({ children }) => {
 
   const sendOtp = async ({ contact, phone, email, type }) => {
     try {
-      const otpContact = contact || phone || email;
+      const otpContact = normalizeContact(contact || phone || email);
       const response = await axios.post('/auth/send-otp', {
         contact: otpContact,
         type: type || (email || otpContact?.includes('@') ? 'email' : 'phone')
@@ -115,6 +121,8 @@ export const AuthProvider = ({ children }) => {
     register: async (userData) => {
       try {
         const { confirmPassword, ...dataToSend } = userData;
+        dataToSend.email = normalizeContact(dataToSend.email);
+        dataToSend.phone = normalizeContact(dataToSend.phone);
         const response = await axios.post('/auth/register', dataToSend);
         
         // Return success without signing in. SignIn happens after verifyOtp.
@@ -125,9 +133,11 @@ export const AuthProvider = ({ children }) => {
         return { success: false, error: errorMessage };
       }
     },
-    verifyOtp: async (otp, phone) => {
+    verifyOtp: async (otp, contact) => {
       try {
-        const response = await axios.post('/auth/verify-otp', { phone, otp });
+        const otpContact = normalizeContact(contact);
+        const payload = otpContact.includes('@') ? { email: otpContact, otp } : { phone: otpContact, otp };
+        const response = await axios.post('/auth/verify-otp', payload);
         const { token, user: userData } = response.data.data;
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(userData));

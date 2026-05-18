@@ -31,7 +31,13 @@ const orderSchema = new mongoose.Schema({
         postalCode: { type: String, required: true },
         country: { type: String, required: true },
         phone: { type: String },
-        email: { type: String }
+        email: { type: String },
+        location: {
+            latitude: Number,
+            longitude: Number,
+            accuracy: Number,
+            capturedAt: Date
+        }
     },
     paymentMethod: {
         type: String,

@@ -59,3 +59,49 @@ cd Customized-T-shirt-Website
 - **Frontend**: React, Vite, TailwindCSS, Fabric.js (Canvas)
 - **Backend**: Node.js, Express, MongoDB (Mongoose)
 - **Authenticaton**: JWT (JSON Web Tokens)
+
+## Deployment Notes
+
+### Backend on Render
+Set these environment variables on the Render backend service:
+
+```env
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_strong_jwt_secret
+CLIENT_URL=https://your-vercel-domain.vercel.app
+EMAIL_PROVIDER=brevo
+BREVO_API_KEY=your_brevo_transactional_email_api_key
+EMAIL_FROM="ViragKala <your_verified_sender_email@example.com>"
+```
+
+Render can time out when connecting to Gmail SMTP ports. The backend therefore supports Brevo and Resend over HTTPS, which is the recommended setup for deployed OTP email.
+
+If you still want SMTP as a fallback, add:
+
+```env
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_USER=your_email@gmail.com
+SMTP_PASS=your_google_app_password
+SMTP_FROM="ViragKala <your_email@gmail.com>"
+```
+
+For Gmail, `SMTP_PASS` must be a Google App Password. A normal Gmail account password will not work.
+Prefer `SMTP_PORT=465` for Gmail on Render. The backend also forces SMTP DNS resolution toward IPv4 to avoid Render/Gmail IPv6 `ENETUNREACH` connection errors.
+
+You can check the backend email configuration after deployment at:
+
+```text
+https://your-render-service.onrender.com/api/auth/otp-health
+```
+
+`data.email.configured` should be `true`. If it is `false`, OTP emails cannot be sent.
+
+### Frontend on Vercel
+Set this environment variable on the Vercel frontend project:
+
+```env
+VITE_API_URL=https://your-render-service.onrender.com/api
+```
+
+After changing Vercel environment variables, redeploy the frontend so the new API URL is baked into the Vite build.

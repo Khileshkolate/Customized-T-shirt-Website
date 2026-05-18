@@ -7,9 +7,21 @@ const otpSchema = new mongoose.Schema({
         required: true,
         index: true
     },
+    purpose: {
+        type: String,
+        enum: ['register', 'login', 'generic'],
+        default: 'generic',
+        index: true
+    },
     otp: {
         type: String,
         required: true
+    },
+    pendingUser: {
+        name: String,
+        email: String,
+        phone: String,
+        passwordHash: String
     },
     expiresAt: {
         type: Date,
@@ -29,11 +41,12 @@ const otpSchema = new mongoose.Schema({
 
 // TTL Index: Deletes the document 0 seconds after the expiresAt date is reached.
 otpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+otpSchema.index({ contact: 1, purpose: 1 });
 
 // Pre-save hook to hash OTP
-otpSchema.pre('save', async function(next) {
+otpSchema.pre('save', async function() {
     if (!this.isModified('otp')) {
-        return next();
+        return;
     }
     const salt = await bcrypt.genSalt(10);
     this.otp = await bcrypt.hash(this.otp, salt);

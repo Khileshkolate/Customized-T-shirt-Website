@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast';
 // Providers
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
+import { WishlistProvider } from './contexts/WishlistContext';
 
 // Components
 import Navbar from './components/common/Navbar';
@@ -19,11 +20,15 @@ import Admin from './pages/Admin'; // NEW ROUTE
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Profile from './pages/Profile';
+import Settings from './pages/Settings';
 import Products from './pages/Products';
 import ProductDetails from './pages/ProductDetails';
 import DesignStudio from './pages/DesignStudio';
 import MyDesigns from './pages/MyDesigns';
+import Wishlist from './pages/Wishlist';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Orders from './pages/Orders';
@@ -59,6 +64,8 @@ const AppContent = () => {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
             <Route path="/otp-verification" element={<OtpVerification />} />
             <Route path="/products" element={<Products />} />
             <Route path="/products/:id" element={<ProductDetails />} />
@@ -68,9 +75,11 @@ const AppContent = () => {
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<Profile />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="/design" element={<Navigate to="/designer" replace />} />
             <Route path="/design/:productId" element={<DesignRedirect />} />
             <Route path="/designs" element={<MyDesigns />} />
+            <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/orders" element={<Orders />} />
@@ -103,17 +112,19 @@ function App() {
     <Router>
       <AuthProvider>
         <CartProvider>
-          <Toaster 
-            position="top-right"
-            toastOptions={{
-              duration: 3000,
-              style: {
-                background: '#363636',
-                color: '#fff',
-              },
-            }}
-          />
-          <AppContent />
+          <WishlistProvider>
+            <Toaster 
+              position="top-right"
+              toastOptions={{
+                duration: 3000,
+                style: {
+                  background: '#363636',
+                  color: '#fff',
+                },
+              }}
+            />
+            <AppContent />
+          </WishlistProvider>
         </CartProvider>
       </AuthProvider>
     </Router>

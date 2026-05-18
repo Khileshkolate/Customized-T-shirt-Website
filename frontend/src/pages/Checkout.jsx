@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
-import { CheckCircle2, ChevronRight, CreditCard, MapPin, ShieldCheck, Truck, Lock } from 'lucide-react';
+import { CheckCircle2, CreditCard, Lock } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import axios from '../utils/axiosInstance';
+import LocationPicker from '../components/common/LocationPicker';
 
 const Checkout = () => {
   const { cartItems, cartTotal, clearCart } = useCart();
@@ -28,9 +29,22 @@ const Checkout = () => {
     street: '',
     city: '',
     state: '',
-    zipCode: ''
+    zipCode: '',
+    location: null
   });
-  const [payment, setPayment] = useState({ cardNumber: '', expiry: '', cvc: '' });
+  useEffect(() => {
+    const savedAddress = user?.addresses?.[0];
+    if (!savedAddress) return;
+
+    setAddress((current) => ({
+      ...current,
+      street: current.street || savedAddress.street || '',
+      city: current.city || savedAddress.city || '',
+      state: current.state || savedAddress.state || '',
+      zipCode: current.zipCode || savedAddress.zipCode || '',
+      location: current.location || savedAddress.location || null
+    }));
+  }, [user]);
 
   const handleNextStep = (e) => {
     e.preventDefault();
@@ -68,7 +82,7 @@ const Checkout = () => {
         key: orderDataResponse.key_id,
         amount: orderDataResponse.data.amount,
         currency: orderDataResponse.data.currency,
-        name: 'PrintCraft',
+        name: 'ViragKala',
         description: 'T-Shirt Purchase',
         order_id: orderDataResponse.data.id,
         handler: async function (response) {
@@ -103,7 +117,8 @@ const Checkout = () => {
                       zipCode: address.zipCode, // the backend normalizes zipCode -> postalCode
                       country: 'India',
                       email: contact.email,
-                      phone: contact.phone
+                      phone: contact.phone,
+                      location: address.location
                     },
                     paymentMethod: 'Razorpay',
                     paymentResult: {
@@ -169,7 +184,7 @@ const Checkout = () => {
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-6 flex items-center justify-between">
           <Link to="/" className="text-xl font-black text-gray-900 tracking-tighter">
-            Print<span className="text-primary-600">Craft</span>
+            Virag<span className="text-primary-600">Kala</span>
           </Link>
           <div className="flex items-center gap-2 text-sm font-medium text-gray-500">
             <Lock className="h-4 w-4" />
@@ -249,6 +264,10 @@ const Checkout = () => {
                         <input type="text" placeholder="State" required value={address.state} onChange={e => setAddress({...address, state: e.target.value})} className="col-span-3 sm:col-span-1 border border-gray-300 px-4 py-3 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" />
                         <input type="text" placeholder="ZIP" required value={address.zipCode} onChange={e => setAddress({...address, zipCode: e.target.value})} className="col-span-3 sm:col-span-1 border border-gray-300 px-4 py-3 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" />
                       </div>
+                      <LocationPicker
+                        value={address.location}
+                        onChange={(location) => setAddress({ ...address, location })}
+                      />
                       <button type="submit" className="w-full sm:w-auto bg-primary-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-500/30">
                         Continue to Payment
                       </button>

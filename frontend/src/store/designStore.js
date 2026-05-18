@@ -9,15 +9,15 @@ const useDesignStore = create((set, get) => ({
     setActiveObject: (obj) => set({ activeObject: obj }),
     
     // Config States
-    shirtType: 'Round Neck',
-    setShirtType: (type) => set({ shirtType: type }),
+    shirtType: 'round-neck',
+    setShirtType: (type) => set({ shirtType: type.toLowerCase() }),
     
-    shirtColor: 'White',
+    shirtColor: 'white',
     shirtColorHex: '#ffffff',
-    setShirtColor: (colorName, hex) => set({ shirtColor: colorName, shirtColorHex: hex }),
+    setShirtColor: (colorValue, hex) => set({ shirtColor: colorValue.toLowerCase(), shirtColorHex: hex }),
     
-    printZone: 'Front',
-    setPrintZone: (zone) => set({ printZone: zone }),
+    printZone: 'front',
+    setPrintZone: (zone) => set({ printZone: zone.toLowerCase() }),
     
     fabric: 'Cotton',
     setFabric: (fabric) => set({ fabric }),

@@ -34,21 +34,53 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    resetPasswordToken: {
+        type: String,
+        select: false
+    },
+    resetPasswordExpires: {
+        type: Date,
+        select: false
+    },
     addresses: [{
         street: String,
         city: String,
         state: String,
         zipCode: String,
+        location: {
+            latitude: Number,
+            longitude: Number,
+            accuracy: Number,
+            capturedAt: Date
+        },
         isDefault: Boolean
-    }]
+    }],
+    preferences: {
+        emailNotifications: {
+            type: Boolean,
+            default: true
+        },
+        orderUpdates: {
+            type: Boolean,
+            default: true
+        },
+        marketingEmails: {
+            type: Boolean,
+            default: false
+        }
+    }
 }, {
     timestamps: true
 });
 
 // Encrypt password using bcrypt
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function() {
     if (!this.isModified('password')) {
-        return next();
+        return;
+    }
+
+    if (this.$locals.skipPasswordHash) {
+        return;
     }
 
     const salt = await bcrypt.genSalt(10);

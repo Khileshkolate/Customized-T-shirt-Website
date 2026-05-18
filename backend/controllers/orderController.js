@@ -1,6 +1,24 @@
 const Order = require('../models/Order');
 const mongoose = require('mongoose');
 
+const normalizeLocation = (location) => {
+    if (!location) return undefined;
+
+    const latitude = Number(location.latitude);
+    const longitude = Number(location.longitude);
+
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+        return undefined;
+    }
+
+    return {
+        latitude,
+        longitude,
+        accuracy: Number.isFinite(Number(location.accuracy)) ? Number(location.accuracy) : undefined,
+        capturedAt: location.capturedAt ? new Date(location.capturedAt) : new Date()
+    };
+};
+
 const normalizeShippingAddress = (shippingAddress = {}) => ({
     firstName: shippingAddress.firstName,
     lastName: shippingAddress.lastName,
@@ -10,7 +28,8 @@ const normalizeShippingAddress = (shippingAddress = {}) => ({
     postalCode: shippingAddress.postalCode || shippingAddress.zipCode,
     country: shippingAddress.country || 'India',
     phone: shippingAddress.phone,
-    email: shippingAddress.email
+    email: shippingAddress.email,
+    location: normalizeLocation(shippingAddress.location)
 });
 
 const normalizeOrderItem = (item) => {
@@ -72,10 +91,7 @@ const addOrderItems = async (req, res) => {
             itemsPrice,
             taxPrice,
             shippingPrice,
-            totalPrice,
-            paymentResult,
-            isPaid: isPaid || false,
-            paidAt: paidAt || null
+            totalPrice
         });
 
         const createdOrder = await order.save();

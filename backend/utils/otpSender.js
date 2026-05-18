@@ -1,19 +1,343 @@
 const nodemailer = require('nodemailer');
 const twilio = require('twilio');
+const dns = require('dns');
+const https = require('https');
 
-// Transporter for Email
-let transporter;
-if (process.env.SMTP_HOST && process.env.SMTP_USER) {
-    transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: process.env.SMTP_PORT || 587,
-        secure: process.env.SMTP_PORT == 465, // true for 465, false for other ports
-        auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS
+if (typeof dns.setDefaultResultOrder === 'function') {
+    dns.setDefaultResultOrder('ipv4first');
+}
+
+const dnsPromises = dns.promises;
+
+const getEnv = (...names) => {
+    for (const name of names) {
+        const value = process.env[name];
+        if (value !== undefined && String(value).trim() !== '') {
+            return String(value).trim();
         }
+    }
+    return undefined;
+};
+
+// Configuration with sensible defaults for Gmail if not provided
+const smtpConfig = {
+    host: getEnv('SMTP_HOST', 'MAIL_HOST', 'EMAIL_HOST') || 'smtp.gmail.com',
+    port: Number(getEnv('SMTP_PORT', 'MAIL_PORT', 'EMAIL_PORT') || 465),
+    user: getEnv('SMTP_USER', 'SMTP_EMAIL', 'MAIL_USER', 'EMAIL_USER', 'GMAIL_USER'),
+    pass: getEnv('SMTP_PASS', 'SMTP_PASSWORD', 'MAIL_PASS', 'EMAIL_PASS', 'GMAIL_APP_PASSWORD', 'GMAIL_PASS'),
+    from: getEnv('SMTP_FROM', 'MAIL_FROM', 'EMAIL_FROM')
+};
+
+const emailApiConfig = {
+    provider: (getEnv('EMAIL_PROVIDER') || '').toLowerCase(),
+    brevoApiKey: getEnv('BREVO_API_KEY', 'SENDINBLUE_API_KEY'),
+    resendApiKey: getEnv('RESEND_API_KEY'),
+    from: getEnv('EMAIL_FROM', 'SMTP_FROM', 'MAIL_FROM')
+};
+
+const missingEmailConfig = [];
+const hasEmailApiProvider = Boolean(emailApiConfig.brevoApiKey || emailApiConfig.resendApiKey);
+const hasSmtpProvider = Boolean(smtpConfig.user && smtpConfig.pass);
+if (!hasEmailApiProvider && !hasSmtpProvider) missingEmailConfig.push('BREVO_API_KEY or RESEND_API_KEY or SMTP_USER/SMTP_PASS');
+if (hasEmailApiProvider && !emailApiConfig.from && !smtpConfig.from && !smtpConfig.user) missingEmailConfig.push('EMAIL_FROM');
+
+let transporter;
+let resolvedSmtpHost;
+const smtpPass = smtpConfig.pass && smtpConfig.host.includes('gmail.com')
+    ? smtpConfig.pass.replace(/\s+/g, '')
+    : smtpConfig.pass;
+const isSecure = smtpConfig.port === 465;
+
+const isIpv4Address = (host) => /^\d{1,3}(\.\d{1,3}){3}$/.test(host);
+
+const getEmailProvider = () => {
+    if (emailApiConfig.provider === 'brevo' && emailApiConfig.brevoApiKey) return 'brevo';
+    if (emailApiConfig.provider === 'resend' && emailApiConfig.resendApiKey) return 'resend';
+    if (emailApiConfig.brevoApiKey) return 'brevo';
+    if (emailApiConfig.resendApiKey) return 'resend';
+    return 'smtp';
+};
+
+const getFromAddress = () => (
+    emailApiConfig.from ||
+    smtpConfig.from ||
+    (smtpConfig.user ? `"ViragKala" <${smtpConfig.user}>` : undefined)
+);
+
+const parseSender = (from) => {
+    const value = String(from || '').trim();
+    const match = value.match(/^(?:"?([^"<]*)"?\s*)?<([^<>@\s]+@[^<>@\s]+)>$/);
+
+    if (match) {
+        return {
+            name: match[1]?.trim() || 'ViragKala',
+            email: match[2].trim()
+        };
+    }
+
+    return {
+        name: 'ViragKala',
+        email: value
+    };
+};
+
+const postJson = (url, headers, payload) => new Promise((resolve, reject) => {
+    const requestUrl = new URL(url);
+    const body = JSON.stringify(payload);
+
+    const req = https.request({
+        hostname: requestUrl.hostname,
+        path: `${requestUrl.pathname}${requestUrl.search}`,
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(body),
+            ...headers
+        },
+        timeout: 15000
+    }, (res) => {
+        let data = '';
+
+        res.on('data', (chunk) => {
+            data += chunk;
+        });
+
+        res.on('end', () => {
+            const ok = res.statusCode >= 200 && res.statusCode < 300;
+            resolve({
+                ok,
+                status: res.statusCode,
+                body: data
+            });
+        });
+    });
+
+    req.on('timeout', () => {
+        req.destroy(new Error('Email API request timed out'));
+    });
+
+    req.on('error', reject);
+    req.write(body);
+    req.end();
+});
+
+const buildOtpEmail = (otp) => ({
+    subject: 'Your Verification Code - ViragKala',
+    text: `Your OTP verification code is: ${otp}. It will expire in 5 minutes.`,
+    html: `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1a202c; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px;">
+            <h2 style="color: #2d3748; text-align: center; margin-bottom: 24px;">Verify Your Account</h2>
+            <p>Hello,</p>
+            <p>Your one-time password (OTP) for ViragKala is:</p>
+            <div style="background-color: #f7fafc; border-radius: 8px; padding: 16px; text-align: center; margin: 24px 0;">
+                <span style="font-size: 32px; font-weight: 800; letter-spacing: 6px; color: #3182ce;">${otp}</span>
+            </div>
+            <p>This code is valid for <strong>5 minutes</strong>. Please do not share this code with anyone.</p>
+            <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+            <p style="font-size: 12px; color: #a0aec0; text-align: center;">If you didn't request this code, you can safely ignore this email.</p>
+        </div>
+    `
+});
+
+const buildPasswordResetEmail = (resetUrl) => ({
+    subject: 'Reset Your ViragKala Password',
+    text: `Reset your ViragKala password using this link: ${resetUrl}. This link expires in 30 minutes. If you did not request it, ignore this email.`,
+    html: `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #1a202c; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px;">
+            <h2 style="color: #2d3748; text-align: center; margin-bottom: 24px;">Reset Your Password</h2>
+            <p>Hello,</p>
+            <p>We received a request to reset your ViragKala password.</p>
+            <p style="text-align: center; margin: 28px 0;">
+                <a href="${resetUrl}" style="display: inline-block; background: #2f7d46; color: #ffffff; text-decoration: none; font-weight: 700; padding: 14px 22px; border-radius: 8px;">Reset Password</a>
+            </p>
+            <p>This link is valid for <strong>30 minutes</strong>. If the button does not work, copy and paste this URL into your browser:</p>
+            <p style="word-break: break-all; color: #2f7d46;">${resetUrl}</p>
+            <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+            <p style="font-size: 12px; color: #a0aec0; text-align: center;">If you didn't request this reset, you can safely ignore this email.</p>
+        </div>
+    `
+});
+
+const sendEmailViaApi = async (email, content) => {
+    const provider = getEmailProvider();
+    const from = getFromAddress();
+
+    if (provider === 'smtp') {
+        return null;
+    }
+
+    if (!from) {
+        console.error('[OTP_EMAIL] EMAIL_FROM is required for API email delivery.');
+        return false;
+    }
+
+    try {
+        if (provider === 'brevo') {
+            const sender = parseSender(from);
+            const response = await postJson(
+                'https://api.brevo.com/v3/smtp/email',
+                {
+                    'api-key': emailApiConfig.brevoApiKey,
+                    accept: 'application/json'
+                },
+                {
+                    sender,
+                    to: [{ email }],
+                    subject: content.subject,
+                    htmlContent: content.html,
+                    textContent: content.text
+                }
+            );
+
+            if (!response.ok) {
+                console.error('[OTP_EMAIL] Brevo API rejected the email', {
+                    status: response.status,
+                    body: response.body
+                });
+                return false;
+            }
+
+            console.log('[OTP_EMAIL] Email sent successfully through Brevo API.', {
+                to: maskEmail(email),
+                status: response.status
+            });
+            return true;
+        }
+
+        if (provider === 'resend') {
+            const response = await postJson(
+                'https://api.resend.com/emails',
+                {
+                    Authorization: `Bearer ${emailApiConfig.resendApiKey}`
+                },
+                {
+                    from,
+                    to: [email],
+                    subject: content.subject,
+                    html: content.html,
+                    text: content.text
+                }
+            );
+
+            if (!response.ok) {
+                console.error('[OTP_EMAIL] Resend API rejected the email', {
+                    status: response.status,
+                    body: response.body
+                });
+                return false;
+            }
+
+            console.log('[OTP_EMAIL] Email sent successfully through Resend API.', {
+                to: maskEmail(email),
+                status: response.status
+            });
+            return true;
+        }
+    } catch (error) {
+        console.error('[OTP_EMAIL] Email API delivery failed', {
+            provider,
+            message: error.message,
+            code: error.code
+        });
+        return false;
+    }
+
+    return null;
+};
+
+const resolveSmtpHost = async () => {
+    if (isIpv4Address(smtpConfig.host)) {
+        return smtpConfig.host;
+    }
+
+    const result = await dnsPromises.lookup(smtpConfig.host, { family: 4 });
+    return result.address;
+};
+
+const getEmailTransporter = async () => {
+    if (!smtpConfig.user || !smtpConfig.pass) {
+        console.warn('[OTP_EMAIL] Email delivery is not configured.', {
+            missing: ['SMTP_USER', 'SMTP_PASS'].filter((name) => !process.env[name]),
+            hint: 'Set SMTP_USER and SMTP_PASS in the backend environment.'
+        });
+        return null;
+    }
+
+    if (transporter) {
+        return transporter;
+    }
+
+    resolvedSmtpHost = await resolveSmtpHost();
+
+    console.log('[OTP_EMAIL] Initializing Mail Transporter', {
+        host: smtpConfig.host,
+        resolvedHost: resolvedSmtpHost,
+        port: smtpConfig.port,
+        secure: isSecure,
+        user: smtpConfig.user.slice(0, 3) + '***'
+    });
+
+    transporter = nodemailer.createTransport({
+        host: resolvedSmtpHost,
+        name: smtpConfig.host,
+        port: smtpConfig.port,
+        secure: isSecure,
+        pool: true,
+        maxConnections: 5,
+        maxMessages: 100,
+        auth: {
+            user: smtpConfig.user,
+            pass: smtpPass
+        },
+        tls: {
+            servername: smtpConfig.host,
+            rejectUnauthorized: false
+        },
+        connectionTimeout: 15000,
+        greetingTimeout: 15000,
+        socketTimeout: 30000
+    });
+
+    return transporter;
+};
+
+if (emailApiConfig.brevoApiKey || emailApiConfig.resendApiKey) {
+    console.log('[OTP_EMAIL] Email API provider configured.', {
+        provider: getEmailProvider(),
+        from: getFromAddress() ? true : false
+    });
+} else if (smtpConfig.user && smtpConfig.pass) {
+    console.log('[OTP_EMAIL] Mail transporter will be initialized on first OTP send.', {
+        host: smtpConfig.host,
+        port: smtpConfig.port,
+        secure: isSecure,
+        user: smtpConfig.user.slice(0, 3) + '***'
+    });
+} else {
+    console.warn('[OTP_EMAIL] Email delivery is not configured.', {
+        missing: missingEmailConfig,
+        hint: 'Set SMTP_USER and SMTP_PASS in the backend environment.'
     });
 }
+
+const maskEmail = (email) => {
+    if (!email || !email.includes('@')) return Boolean(email);
+    const [name, domain] = email.split('@');
+    return `${name.slice(0, 2)}***@${domain}`;
+};
+
+const getEmailOtpStatus = () => ({
+    configured: missingEmailConfig.length === 0,
+    provider: getEmailProvider(),
+    apiConfigured: Boolean(emailApiConfig.brevoApiKey || emailApiConfig.resendApiKey),
+    transporterReady: Boolean(transporter),
+    host: smtpConfig.host,
+    resolvedHost: resolvedSmtpHost,
+    port: smtpConfig.port,
+    user: maskEmail(smtpConfig.user),
+    from: smtpConfig.from ? smtpConfig.from.replace(smtpConfig.user || '', maskEmail(smtpConfig.user) || '') : undefined,
+    missing: missingEmailConfig
+});
 
 // Twilio Client
 let twilioClient;
@@ -21,27 +345,71 @@ if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
     twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 }
 
-const sendEmailOtp = async (email, otp) => {
-    if (!transporter) {
-        console.log(`[MOCK EMAIL OTP] To: ${email} | Code: ${otp}`);
-        return true;
+const sendEmailContent = async (email, content, logLabel) => {
+    const apiSent = await sendEmailViaApi(email, content);
+    if (apiSent !== null) {
+        return apiSent;
+    }
+
+    let emailTransporter;
+    try {
+        emailTransporter = await getEmailTransporter();
+    } catch (error) {
+        console.error('[OTP_EMAIL] Failed to initialize email transporter', {
+            host: smtpConfig.host,
+            message: error.message,
+            code: error.code
+        });
+        return false;
+    }
+
+    if (!emailTransporter) {
+        console.error('[OTP_EMAIL] Cannot send email because email delivery is not configured.', {
+            kind: logLabel,
+            to: maskEmail(email),
+            missing: missingEmailConfig
+        });
+        return false;
     }
 
     try {
-        const info = await transporter.sendMail({
-            from: `"ViragKala Authentication" <${process.env.SMTP_USER}>`,
-            to: email,
-            subject: 'Your Login OTP Code',
-            text: `Your OTP verification code is: ${otp}. It will expire in 5 minutes.`,
-            html: `<p>Your OTP verification code is: <b>${otp}</b></p><p>It will expire in 5 minutes.</p>`
+        console.log('[OTP_EMAIL] Attempting to send real email...', {
+            kind: logLabel,
+            to: maskEmail(email),
+            host: smtpConfig.host,
+            resolvedHost: resolvedSmtpHost,
+            port: smtpConfig.port
         });
-        console.log('Message sent: %s', info.messageId);
+
+        const info = await emailTransporter.sendMail({
+            from: getFromAddress(),
+            to: email,
+            subject: content.subject,
+            text: content.text,
+            html: content.html
+        });
+
+        console.log('[OTP_EMAIL] Email sent successfully!', { messageId: info.messageId });
         return true;
     } catch (error) {
-        console.error('Error sending email OTP:', error);
+        console.error('[OTP_EMAIL] CRITICAL ERROR: Connection failed', {
+            message: error.message,
+            code: error.code,
+            command: error.command,
+            stack: error.stack?.split('\n')[0]
+        });
+        
         return false;
     }
 };
+
+const sendEmailOtp = async (email, otp) => (
+    sendEmailContent(email, buildOtpEmail(otp), 'otp')
+);
+
+const sendPasswordResetEmail = async (email, resetUrl) => (
+    sendEmailContent(email, buildPasswordResetEmail(resetUrl), 'password_reset')
+);
 
 const sendSmsOtp = async (phone, otp) => {
     if (!twilioClient) {
@@ -53,7 +421,7 @@ const sendSmsOtp = async (phone, otp) => {
         const message = await twilioClient.messages.create({
             body: `Your ViragKala verification code is: ${otp}. It will expire in 5 minutes.`,
             from: process.env.TWILIO_PHONE_NUMBER,
-            to: `+91${phone.replace(/^\+91/, '')}` // Format to e.164 if needed
+            to: `+91${phone.replace(/^\+91/, '')}`
         });
         console.log('SMS sent: %s', message.sid);
         return true;
@@ -65,5 +433,7 @@ const sendSmsOtp = async (phone, otp) => {
 
 module.exports = {
     sendEmailOtp,
-    sendSmsOtp
+    sendPasswordResetEmail,
+    sendSmsOtp,
+    getEmailOtpStatus
 };

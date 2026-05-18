@@ -332,6 +332,7 @@ import axios from '../utils/axiosInstance'
 import Loader from '../components/common/Loader'
 import { motion, AnimatePresence } from 'framer-motion'
 import useAdminStore from '../store/adminStore'
+import { useWishlist } from '../contexts/WishlistContext'
 
 
 const Products = () => {
@@ -427,6 +428,7 @@ const Products = () => {
   ]
 
   const [products, setProducts] = useState([])
+  const { isWishlisted, toggleWishlist } = useWishlist()
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -463,7 +465,25 @@ const Products = () => {
   };
 
   const filteredProducts = products.filter(product => {
-    if (selectedCategory && product.category !== categories.find(c => c.slug === selectedCategory)?._id) {
+    const selectedCategoryMeta = categories.find(c => c.slug === selectedCategory);
+    if (selectedCategoryMeta) {
+      const productCategory = String(product.category || '').toLowerCase();
+      const productType = String(product.type || '').toLowerCase();
+      const categoryName = selectedCategoryMeta.name.toLowerCase();
+      const categorySlug = selectedCategoryMeta.slug.toLowerCase();
+      const categoryId = selectedCategoryMeta._id;
+
+      const matchesCategory =
+        product.category === categoryId ||
+        productCategory === categoryName ||
+        productCategory === categorySlug ||
+        productType === categorySlug.replace(/s$/, '') ||
+        productType === categoryName.replace(/s$/, '').toLowerCase();
+
+      if (!matchesCategory) {
+        return false
+      }
+    } else if (selectedCategory) {
       return false
     }
     if (searchTerm && !product.name.toLowerCase().includes(searchTerm.toLowerCase())) {
@@ -835,8 +855,16 @@ const Products = () => {
                         
                         {/* Quick Actions */}
                         <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          <button className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow">
-                            <Heart className="h-5 w-5 text-gray-600 hover:text-red-500" />
+                          <button
+                            type="button"
+                            onClick={() => toggleWishlist({
+                              ...product,
+                              image: getProductImage(product) || product.images?.[0]?.url
+                            })}
+                            className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow"
+                            aria-label={isWishlisted(product._id) ? 'Remove from wishlist' : 'Add to wishlist'}
+                          >
+                            <Heart className={`h-5 w-5 ${isWishlisted(product._id) ? 'fill-red-500 text-red-500' : 'text-gray-600 hover:text-red-500'}`} />
                           </button>
                         </div>
                         

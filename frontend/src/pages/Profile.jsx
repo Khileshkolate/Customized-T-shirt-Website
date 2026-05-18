@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   User, Mail, Smartphone, MapPin, Edit2, Save, X,
-  Package, CreditCard, Heart, Settings, LogOut, Palette
+  Package, Heart, Settings, LogOut, Palette, KeyRound
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import axios from '../utils/axiosInstance';
 import toast from 'react-hot-toast';
+import LocationPicker from '../components/common/LocationPicker';
 
 const Profile = () => {
   const { user, updateProfile, logout } = useAuth();
@@ -15,10 +16,12 @@ const Profile = () => {
     name: '',
     email: '',
     phone: '',
-    address: ''
+    address: '',
+    location: null
   });
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -26,7 +29,8 @@ const Profile = () => {
         name: user.name || '',
         email: user.email || '',
         phone: user.phone || '',
-        address: user.addresses?.[0]?.street || ''
+        address: user.addresses?.[0]?.street || '',
+        location: user.addresses?.[0]?.location || null
       });
       fetchOrders();
     }
@@ -45,9 +49,20 @@ const Profile = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await updateProfile(formData);
-      setIsEditing(false);
-      toast.success('Profile updated successfully');
+      const result = await updateProfile({
+        name: formData.name,
+        phone: formData.phone,
+        addressDetails: {
+          street: formData.address,
+          city: formData.location?.address?.city,
+          state: formData.location?.address?.state,
+          zipCode: formData.location?.address?.zipCode,
+          location: formData.location
+        }
+      });
+      if (result.success) {
+        setIsEditing(false);
+      }
     } catch (error) {
       toast.error('Failed to update profile');
     }
@@ -57,6 +72,63 @@ const Profile = () => {
   const handleLogout = () => {
     logout();
     window.location.href = '/';
+  };
+
+  const handleLocationChange = async (location) => {
+    const detectedAddress = location.address?.displayName || '';
+    const nextAddress = detectedAddress || formData.address;
+
+    setFormData((current) => ({
+      ...current,
+      address: detectedAddress || current.address,
+      location
+    }));
+
+    if (isEditing) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const result = await updateProfile({
+        name: formData.name,
+        phone: formData.phone,
+        addressDetails: {
+          street: nextAddress,
+          city: location.address?.city,
+          state: location.address?.state,
+          zipCode: location.address?.zipCode,
+          location
+        }
+      });
+      if (!result.success) {
+        toast.error(result.error || 'Failed to save live location');
+      }
+    } catch (error) {
+      toast.error('Failed to save live location');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    if (!user?.email) {
+      toast.error('No email found for this account');
+      return;
+    }
+
+    setResetLoading(true);
+    try {
+      const response = await axios.post('/auth/forgot-password', {
+        email: user.email,
+        clientOrigin: window.location.origin
+      });
+      toast.success(response.data.message || 'Password reset link sent');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to send reset link');
+    } finally {
+      setResetLoading(false);
+    }
   };
 
   if (!user) {
@@ -96,27 +168,20 @@ const Profile = () => {
                   <Palette className="h-5 w-5" />
                   My Designs
                 </Link>
-                <button 
-                  onClick={() => toast.success('Wishlist coming soon!')}
+                <Link
+                  to="/wishlist"
                   className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <Heart className="h-5 w-5" />
                   Wishlist
-                </button>
-                <button 
-                  onClick={() => toast.success('Payment Methods coming soon!')}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <CreditCard className="h-5 w-5" />
-                  Payment Methods
-                </button>
-                <button 
-                  onClick={() => toast.success('Settings coming soon!')}
+                </Link>
+                <Link 
+                  to="/settings"
                   className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <Settings className="h-5 w-5" />
                   Settings
-                </button>
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors mt-6"
@@ -207,6 +272,15 @@ const Profile = () => {
                       />
                     </div>
                   </div>
+
+                  <div className="md:col-span-2">
+                    <LocationPicker
+                      value={formData.location}
+                      onChange={handleLocationChange}
+                      disabled={loading}
+                      compact
+                    />
+                  </div>
                 </div>
 
                 {isEditing && (
@@ -224,6 +298,29 @@ const Profile = () => {
               </form>
             </div>
 
+            <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-xl bg-primary-50 text-primary-700 flex items-center justify-center">
+                    <KeyRound className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Password & Security</h3>
+                    <p className="text-gray-600 text-sm">Send a secure reset link to {user.email}.</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handlePasswordReset}
+                  disabled={resetLoading}
+                  className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 disabled:opacity-50"
+                >
+                  <Mail className="h-4 w-4" />
+                  {resetLoading ? 'Sending...' : 'Email Reset Link'}
+                </button>
+              </div>
+            </div>
+
             {/* Recent Orders */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <h3 className="text-xl font-bold text-gray-900 mb-6">Recent Orders</h3>
@@ -232,13 +329,13 @@ const Profile = () => {
                   {orders.slice(0, 5).map((order) => (
                     <div key={order._id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
                       <div>
-                        <div className="font-medium text-gray-900">Order #{order.orderId}</div>
+                        <div className="font-medium text-gray-900">Order #{order.orderId || order._id?.slice(-8)}</div>
                         <div className="text-sm text-gray-600">
                           {new Date(order.createdAt).toLocaleDateString()}
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-bold text-gray-900">Rs. {order.finalAmount}</div>
+                        <div className="font-bold text-gray-900">Rs. {order.finalAmount || order.totalPrice || 0}</div>
                         <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
                           order.orderStatus === 'delivered' ? 'bg-green-100 text-green-800' :
                           order.orderStatus === 'processing' ? 'bg-secondary-100 text-secondary-800' :
@@ -255,9 +352,9 @@ const Profile = () => {
                 <div className="text-center py-8">
                   <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-600">No orders yet</p>
-                  <button className="mt-4 px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
+                  <Link to="/products" className="inline-block mt-4 px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
                     Start Shopping
-                  </button>
+                  </Link>
                 </div>
               )}
             </div>
