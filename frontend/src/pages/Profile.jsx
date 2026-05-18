@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   User, Mail, Smartphone, MapPin, Edit2, Save, X,
-  Package, CreditCard, Heart, Settings, LogOut, Palette, KeyRound
+  Package, Heart, Settings, LogOut, Palette, KeyRound
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import axios from '../utils/axiosInstance';
@@ -49,16 +49,20 @@ const Profile = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await updateProfile({
+      const result = await updateProfile({
         name: formData.name,
         phone: formData.phone,
         addressDetails: {
           street: formData.address,
+          city: formData.location?.address?.city,
+          state: formData.location?.address?.state,
+          zipCode: formData.location?.address?.zipCode,
           location: formData.location
         }
       });
-      setIsEditing(false);
-      toast.success('Profile updated successfully');
+      if (result.success) {
+        setIsEditing(false);
+      }
     } catch (error) {
       toast.error('Failed to update profile');
     }
@@ -68,6 +72,43 @@ const Profile = () => {
   const handleLogout = () => {
     logout();
     window.location.href = '/';
+  };
+
+  const handleLocationChange = async (location) => {
+    const detectedAddress = location.address?.displayName || '';
+    const nextAddress = detectedAddress || formData.address;
+
+    setFormData((current) => ({
+      ...current,
+      address: detectedAddress || current.address,
+      location
+    }));
+
+    if (isEditing) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const result = await updateProfile({
+        name: formData.name,
+        phone: formData.phone,
+        addressDetails: {
+          street: nextAddress,
+          city: location.address?.city,
+          state: location.address?.state,
+          zipCode: location.address?.zipCode,
+          location
+        }
+      });
+      if (!result.success) {
+        toast.error(result.error || 'Failed to save live location');
+      }
+    } catch (error) {
+      toast.error('Failed to save live location');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handlePasswordReset = async () => {
@@ -127,20 +168,13 @@ const Profile = () => {
                   <Palette className="h-5 w-5" />
                   My Designs
                 </Link>
-                <button 
-                  onClick={() => toast.success('Wishlist coming soon!')}
+                <Link
+                  to="/wishlist"
                   className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <Heart className="h-5 w-5" />
                   Wishlist
-                </button>
-                <button 
-                  onClick={() => toast.success('Payment Methods coming soon!')}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <CreditCard className="h-5 w-5" />
-                  Payment Methods
-                </button>
+                </Link>
                 <Link 
                   to="/settings"
                   className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
@@ -242,8 +276,8 @@ const Profile = () => {
                   <div className="md:col-span-2">
                     <LocationPicker
                       value={formData.location}
-                      onChange={(location) => setFormData({ ...formData, location })}
-                      disabled={!isEditing}
+                      onChange={handleLocationChange}
+                      disabled={loading}
                       compact
                     />
                   </div>
@@ -295,13 +329,13 @@ const Profile = () => {
                   {orders.slice(0, 5).map((order) => (
                     <div key={order._id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
                       <div>
-                        <div className="font-medium text-gray-900">Order #{order.orderId}</div>
+                        <div className="font-medium text-gray-900">Order #{order.orderId || order._id?.slice(-8)}</div>
                         <div className="text-sm text-gray-600">
                           {new Date(order.createdAt).toLocaleDateString()}
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-bold text-gray-900">Rs. {order.finalAmount}</div>
+                        <div className="font-bold text-gray-900">Rs. {order.finalAmount || order.totalPrice || 0}</div>
                         <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
                           order.orderStatus === 'delivered' ? 'bg-green-100 text-green-800' :
                           order.orderStatus === 'processing' ? 'bg-secondary-100 text-secondary-800' :
@@ -318,9 +352,9 @@ const Profile = () => {
                 <div className="text-center py-8">
                   <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-600">No orders yet</p>
-                  <button className="mt-4 px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
+                  <Link to="/products" className="inline-block mt-4 px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
                     Start Shopping
-                  </button>
+                  </Link>
                 </div>
               )}
             </div>

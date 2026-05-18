@@ -731,7 +731,8 @@ import {
   Printer,
   Layers,
   Sparkles,
-  Settings
+  Settings,
+  Heart
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useCart } from '../../contexts/CartContext'
@@ -1148,6 +1149,14 @@ const Navbar = () => {
                           <span>My Designs</span>
                         </Link>
                         <Link
+                          to="/wishlist"
+                          className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-gray-700"
+                          onClick={() => setIsProfileOpen(false)}
+                        >
+                          <Heart className="h-4 w-4" />
+                          <span>Wishlist</span>
+                        </Link>
+                        <Link
                           to="/settings"
                           className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-gray-700"
                           onClick={() => setIsProfileOpen(false)}
@@ -1360,6 +1369,14 @@ const Navbar = () => {
                       >
                         <Palette className="h-5 w-5" />
                         <span className="font-medium">My Designs</span>
+                      </Link>
+                      <Link
+                        to="/wishlist"
+                        className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:text-primary-600 hover:bg-gray-50 rounded-lg transition-colors"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <Heart className="h-5 w-5" />
+                        <span className="font-medium">Wishlist</span>
                       </Link>
                       <Link
                         to="/settings"

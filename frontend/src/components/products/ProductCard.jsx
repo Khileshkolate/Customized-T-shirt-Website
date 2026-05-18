@@ -1,18 +1,20 @@
 import { Link } from 'react-router-dom'
 import { ShoppingBag, Star, Heart } from 'lucide-react'
-import { useState } from 'react'
+import { useWishlist } from '../../contexts/WishlistContext'
 
 const ProductCard = ({ product }) => {
-  const [isLiked, setIsLiked] = useState(false)
+  const { isWishlisted, toggleWishlist } = useWishlist()
 
   const imageUrl = product.images?.[0]?.url || '/placeholder.jpg'
+  const isLiked = isWishlisted(product._id)
 
   return (
     <div className="group relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300">
       {/* Like Button */}
       <button
-        onClick={() => setIsLiked(!isLiked)}
+        onClick={() => toggleWishlist({ ...product, image: imageUrl })}
         className="absolute top-4 right-4 z-10 p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors"
+        aria-label={isLiked ? 'Remove from wishlist' : 'Add to wishlist'}
       >
         <Heart 
           className={`h-5 w-5 transition-colors ${

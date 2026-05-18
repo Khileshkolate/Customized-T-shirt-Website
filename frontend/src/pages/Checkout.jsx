@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
-import { CheckCircle2, ChevronRight, CreditCard, MapPin, ShieldCheck, Truck, Lock } from 'lucide-react';
+import { CheckCircle2, CreditCard, Lock } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import axios from '../utils/axiosInstance';
@@ -32,8 +32,6 @@ const Checkout = () => {
     zipCode: '',
     location: null
   });
-  const [payment, setPayment] = useState({ cardNumber: '', expiry: '', cvc: '' });
-
   useEffect(() => {
     const savedAddress = user?.addresses?.[0];
     if (!savedAddress) return;

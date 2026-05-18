@@ -28,6 +28,28 @@ const buildMapUrls = (location) => {
   };
 };
 
+const reverseGeocode = async ({ latitude, longitude }) => {
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`
+    );
+
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    const address = data.address || {};
+
+    return {
+      displayName: data.display_name || '',
+      city: address.city || address.town || address.village || address.suburb || '',
+      state: address.state || '',
+      zipCode: address.postcode || ''
+    };
+  } catch {
+    return null;
+  }
+};
+
 const LocationPicker = ({ value, onChange, disabled = false, compact = false }) => {
   const [detecting, setDetecting] = useState(false);
   const mapUrls = useMemo(() => buildMapUrls(value), [value]);
@@ -40,15 +62,21 @@ const LocationPicker = ({ value, onChange, disabled = false, compact = false }) 
 
     setDetecting(true);
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        onChange({
+      async (position) => {
+        const location = {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
           accuracy: position.coords.accuracy,
           capturedAt: new Date().toISOString()
+        };
+        const address = await reverseGeocode(location);
+
+        onChange({
+          ...location,
+          address
         });
         setDetecting(false);
-        toast.success('Live location detected');
+        toast.success(address?.displayName ? 'Live location and address detected' : 'Live location detected');
       },
       (error) => {
         setDetecting(false);
@@ -90,7 +118,7 @@ const LocationPicker = ({ value, onChange, disabled = false, compact = false }) 
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-3 font-semibold text-white hover:bg-primary-700 disabled:opacity-50"
           >
             <Crosshair className="h-4 w-4" />
-            {detecting ? 'Detecting...' : 'Use Live Location'}
+            {detecting ? 'Detecting...' : mapUrls ? 'Update Live Location' : 'Add Live Location'}
           </button>
         )}
       </div>

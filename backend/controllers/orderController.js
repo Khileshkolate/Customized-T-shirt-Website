@@ -91,10 +91,7 @@ const addOrderItems = async (req, res) => {
             itemsPrice,
             taxPrice,
             shippingPrice,
-            totalPrice,
-            paymentResult,
-            isPaid: isPaid || false,
-            paidAt: paidAt || null
+            totalPrice
         });
 
         const createdOrder = await order.save();

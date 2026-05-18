@@ -325,9 +325,9 @@ const Home = () => {
       </section>
 
       {/* Design Categories */}
-      <section className="py-20 bg-white">
+      <section className="py-12 bg-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
               Explore Categories
             </h2>
@@ -336,12 +336,12 @@ const Home = () => {
             </p>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5">
             {designCategories.map((category) => (
               <Link
                 key={category.id}
                 to={`/products?category=${category.name.toLowerCase()}`}
-                className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-50 to-white p-6 text-center border border-gray-100 hover:border-transparent transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-gray-50 to-white p-5 text-center border border-gray-100 hover:border-transparent transition-all duration-300 hover:scale-105 hover:shadow-xl"
               >
                 <div className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
                 <div className="text-4xl mb-4">{category.icon}</div>
@@ -357,9 +357,9 @@ const Home = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-gradient-to-b from-white to-gray-50">
+      <section className="py-12 bg-gradient-to-b from-white to-gray-50">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
               Why Choose ViragKala?
             </h2>
@@ -368,11 +368,11 @@ const Home = () => {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((feature, index) => (
               <div
                 key={index}
-                className="group relative bg-white rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-gray-100"
+                className="group relative bg-white rounded-xl p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border border-gray-100"
               >
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-600 via-primary-500 to-secondary-400 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-100 to-primary-50 text-primary-600 rounded-2xl mb-6 group-hover:scale-110 transition-transform duration-300">

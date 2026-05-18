@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast';
 // Providers
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
+import { WishlistProvider } from './contexts/WishlistContext';
 
 // Components
 import Navbar from './components/common/Navbar';
@@ -27,6 +28,7 @@ import Products from './pages/Products';
 import ProductDetails from './pages/ProductDetails';
 import DesignStudio from './pages/DesignStudio';
 import MyDesigns from './pages/MyDesigns';
+import Wishlist from './pages/Wishlist';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Orders from './pages/Orders';
@@ -77,6 +79,7 @@ const AppContent = () => {
             <Route path="/design" element={<Navigate to="/designer" replace />} />
             <Route path="/design/:productId" element={<DesignRedirect />} />
             <Route path="/designs" element={<MyDesigns />} />
+            <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/orders" element={<Orders />} />
@@ -109,17 +112,19 @@ function App() {
     <Router>
       <AuthProvider>
         <CartProvider>
-          <Toaster 
-            position="top-right"
-            toastOptions={{
-              duration: 3000,
-              style: {
-                background: '#363636',
-                color: '#fff',
-              },
-            }}
-          />
-          <AppContent />
+          <WishlistProvider>
+            <Toaster 
+              position="top-right"
+              toastOptions={{
+                duration: 3000,
+                style: {
+                  background: '#363636',
+                  color: '#fff',
+                },
+              }}
+            />
+            <AppContent />
+          </WishlistProvider>
         </CartProvider>
       </AuthProvider>
     </Router>

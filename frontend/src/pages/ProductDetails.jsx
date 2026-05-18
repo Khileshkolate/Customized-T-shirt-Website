@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Shield, Truck, RotateCcw, Star, ChevronRight, ShoppingBag, Palette, ArrowLeft, Check } from 'lucide-react';
+import { Shield, Truck, RotateCcw, Star, ChevronRight, ShoppingBag, Palette, Check, Heart } from 'lucide-react';
 import Loader from '../components/common/Loader';
 import { useCart } from '../contexts/CartContext';
 import axios from '../utils/axiosInstance';
 import toast from 'react-hot-toast';
 import useAdminStore from '../store/adminStore';
+import { useWishlist } from '../contexts/WishlistContext';
 
 const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { isWishlisted, toggleWishlist } = useWishlist();
   
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -362,6 +364,17 @@ const ProductDetails = () => {
               >
                 <Palette className="h-5 w-5" />
                 Customize Design
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleWishlist({
+                  ...product,
+                  image: displayImages[activeImage]?.url || displayImages[activeImage] || product.images?.[0]?.url
+                })}
+                className="sm:col-span-2 flex items-center justify-center gap-2 w-full border-2 border-gray-200 bg-white px-8 py-3.5 rounded-2xl font-bold text-gray-800 hover:border-red-200 hover:bg-red-50 hover:text-red-600 transition-all"
+              >
+                <Heart className={`h-5 w-5 ${isWishlisted(product._id) ? 'fill-red-500 text-red-500' : ''}`} />
+                {isWishlisted(product._id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
               </button>
             </div>
 
