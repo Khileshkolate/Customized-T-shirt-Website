@@ -19,12 +19,31 @@ const allowedOrigins = (process.env.CLIENT_URL || process.env.CORS_ORIGIN || '')
     .map((origin) => origin.trim())
     .filter(Boolean);
 
+const isAllowedOrigin = (origin) => {
+    if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+        return true;
+    }
+
+    try {
+        const { hostname, protocol } = new URL(origin);
+        const isHttps = protocol === 'https:';
+        const isVercelDomain = hostname.endsWith('.vercel.app');
+        const isProjectDeployment = hostname.includes('customizedtshirtwebsite')
+            || hostname.includes('customized-t-shirt-website');
+
+        return isHttps && isVercelDomain && isProjectDeployment;
+    } catch (error) {
+        return false;
+    }
+};
+
 app.use(cors({
     origin: (origin, callback) => {
-        if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+        if (isAllowedOrigin(origin)) {
             return callback(null, true);
         }
 
+        console.warn(`Blocked by CORS. Origin: ${origin || 'unknown'}`);
         return callback(new Error('Not allowed by CORS'));
     }
 }));
